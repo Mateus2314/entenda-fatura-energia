@@ -1,0 +1,3 @@
+org.springframework.context.ApplicationContextInitializer=\
+com.understand_your_electricity_bill.understand_your_electricity_bill.config.DotenvConfig
+

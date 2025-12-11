@@ -1,7 +1,7 @@
 target/
 !.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+!backend/src_Errado/main/**/target/
+!backend/src_Errado/test/**/target/
 
 ### IntelliJ IDEA ###
 .idea/
@@ -29,8 +29,8 @@ target/
 /nbdist/
 /.nb-gradle/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+!backend/src_Errado/main/**/build/
+!backend/src_Errado/test/**/build/
 
 ### VS Code ###
 .vscode/
@@ -40,4 +40,6 @@ build/
 
 ### Security ###
 .env
+*.env
+backend/.env
 application-dev.properties
