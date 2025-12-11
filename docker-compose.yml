@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: energia-db
+    ports:
+      - "5433:5432"   # porta externa 5433 mapeada para 5432 interna
+    environment:
+      POSTGRES_DB: energia
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  pgdata:
