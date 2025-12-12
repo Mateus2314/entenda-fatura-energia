@@ -42,4 +42,3 @@ build/
 .env
 *.env
 backend/.env
-application-dev.properties
