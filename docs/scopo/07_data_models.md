@@ -8,26 +8,25 @@
 **Attributes:**
 - `id` (UUID) - Primary key, unique identifier
 - `email` (String) - Unique email address, indexed
-- `passwordHash` (String) - BCrypt hashed password
-- `userType` (Enum) - CLIENT, CONSULTANT, ADMIN
+- `password` (String) - BCrypt hashed password
+- `name` (String) - User's full name
+- `phone` (String) - Phone number with country code
 - `createdAt` (Timestamp) - Account creation date
 - `updatedAt` (Timestamp) - Last update date
-- `lastLogin` (Timestamp) - Last successful login
-- `isActive` (Boolean) - Account active status
-- `isEmailVerified` (Boolean) - Email verification status
-- `emailVerificationToken` (String) - Verification token, nullable
-- `passwordResetToken` (String) - Password reset token, nullable
-- `passwordResetExpires` (Timestamp) - Reset token expiration
+- `status` (Enum) - ACTIVE, INACTIVE, SUSPENDED, PENDING_VERIFICATION
 
 **Validations:**
 - Email: Valid format, unique, max 255 chars
 - Password: Min 8 chars, 1 uppercase, 1 number, 1 special character
-- UserType: Must be one of defined enum values
+- Name: Required, min 3 chars, max 255 chars
+- Phone: Valid format with country code (e.g., +5511999999999)
+- Status: Must be one of defined enum values
 
 **Business Rules:**
 - Email must be verified before full access
 - Account can be deactivated but not deleted (soft delete)
 - Password must be changed every 180 days (future)
+- Status PENDING_VERIFICATION until email verified
 
 ---
 
@@ -87,20 +86,23 @@
 
 **Attributes:**
 - `userId` (UUID) - Foreign key to User, also primary key
-- `fullName` (String) - Complete name
-- `adminLevel` (Integer) - Permission level (1-5)
+- `role` (Enum) - SUPER_ADMIN, ADMIN, MODERATOR
+- `permissions` (JSON) - Detailed permissions object
 
 **Relationships:**
 - Can access all entities for management
 
 **Validations:**
-- AdminLevel: Between 1 and 5
+- Role: Must be one of defined enum values
+- Permissions: Valid JSON structure
 
 **Business Rules:**
 - Can view all users and data
-- Can perform administrative actions
+- Can perform administrative actions based on role
 - All actions logged in audit trail
 - Cannot be created via public registration
+- Permissions checked before each admin operation
+- SUPER_ADMIN has all permissions
 
 ---
 
@@ -616,10 +618,16 @@
 
 ## 7. Enumerations
 
-### UserType
-- CLIENT
-- CONSULTANT
+### UserStatus
+- ACTIVE
+- INACTIVE
+- SUSPENDED
+- PENDING_VERIFICATION
+
+### AdminRole
+- SUPER_ADMIN
 - ADMIN
+- MODERATOR
 
 ### TariffModality
 - CONVENTIONAL

@@ -59,22 +59,29 @@ S -->|GET /api/admin/logs| AX[Audit Controller]
 AX --> AY[Audit Service]
 end
 
-subgraph DB [Banco de Dados - PostgreSQL]
-Z1 --> BA[(users)]
-Z2 --> BA
-Z3 --> BA
-BA --> BB[(clients - herda users)]
-BA --> BC[(consultants - herda users)]
-BA --> BD[(admins - herda users)]
-AB --> BE[(bills_data)]
-AE --> BF[(engineering_data)]
-AL --> BG[(analysis_results)]
-AO --> BH[(simulations)]
-AU --> BI[(client_consultant - relação)]
-AY --> BJ[(audit_logs)]
-BK[(countries)]
-BL[(utility_companies)]
-BM[(tariff_cache)]
+subgraph DB [Banco de Dados - PostgreSQL - JOINED Inheritance]
+    BA[(users - base table)]
+    BA -->|user_id FK| BB[(clients)]
+    BA -->|user_id FK| BC[(consultants)]
+    BA -->|user_id FK| BD[(admins)]
+    
+    BB -->|1:N| BE[(bills_data)]
+    BC -->|1:N| BE
+    BE -->|N:1| BL[(utility_companies)]
+    BE -->|1:1| BF[(engineering_data)]
+    BE -->|1:1| BG[(analysis_results)]
+    BE -->|1:N| BH[(simulations)]
+    
+    BB -.M:N.- BI[(client_consultant_relation)] -.M:N.- BC
+    
+    BA -->|logs| BJ[(audit_logs)]
+    BL -->|1:N| BM[(tariff_cache)]
+    BK[(countries)]
+    
+    note1["users: id, email, password, name, phone, createdAt, updatedAt, status"]
+    note2["clients: user_id, address, cpf, registrationDate"]
+    note3["consultants: user_id, company, cnpj, registrationNumber, address"]
+    note4["admins: user_id, role, permissions"]
 end
 
 subgraph APIs [APIs Externas]
