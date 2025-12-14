@@ -8,7 +8,32 @@ This directory contains detailed database design documentation for the **Underst
 
 ### [JPA Inheritance Strategy](jpa-inheritance-strategy.md)
 **Status:** ✅ Approved  
-**Date:** December 2024  
+**Date:** December 2024
+
+---
+
+## 📋 Migrations
+
+### V001 - Create Users Base Table
+**Status:** ✅ Implemented and Validated  
+**Date:** 2024-12-14  
+**Script:** `V1__create_user_table.sql`  
+
+**Documentation:**
+- [Migration Documentation](./migrations/V001/migration.md)
+- [Validation Report](./migrations/V001/validation.md)
+- [Validation Queries](./migrations/V001/queries.sql)
+
+**What was created:**
+- Base `users` table (9 columns)
+- ENUMs: `user_type`, `user_status`
+- Constraints: Primary Key, Unique, 2 Check constraints
+- Indexes: 4 performance indexes
+- Trigger: Auto-update `updated_at`
+
+**Next:** V002 - Create `clients` table
+
+---  
 
 **Content:**
 - Research on 3 JPA inheritance strategies (SINGLE_TABLE, JOINED, TABLE_PER_CLASS)
