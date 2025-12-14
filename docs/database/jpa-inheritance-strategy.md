@@ -29,16 +29,26 @@ User (Abstract Base Entity)
 - `address` (String)
 - `cpf` (String) - Brazilian individual tax ID
 - `registrationDate` (Date)
+- 
+- **Relationship:** One-to-Many with BillData (owns electricity bills)
 
 **Consultant:**
 - `company` (String)
 - `cnpj` (String) - Brazilian company tax ID
 - `registrationNumber` (String) - Professional license
 - `address` (String) - Business address
+- **Relationship:** One-to-Many with BillData (manages client bills)
 
 **Admin:**
 - `role` (Enum) - SUPER_ADMIN, ADMIN, MODERATOR
 - `permissions` (JSON) - Detailed permissions
+
+### Key Relationships
+
+- **Client → BillData**: One client can have many electricity bills
+- **Consultant → BillData**: One consultant can manage many bills for their clients
+- **BillData**: Each bill belongs to one client and optionally one consultant
+- **Client ↔ Consultant**: Many-to-many relationship (managed through separate table)
 
 ---
 
@@ -341,6 +351,57 @@ public class Admin extends User {
     
     @Column(columnDefinition = "JSONB")
     private String permissions;
+    
+    // Getters and setters
+}
+```
+
+**BillData Entity (Related Entity):**
+
+```java
+@Entity
+@Table(name = "bills_data")
+public class BillData {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id", nullable = false)
+    private Client client;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "consultant_id")
+    private Consultant consultant;
+    
+    @Column(name = "reference_month", nullable = false)
+    private Integer referenceMonth;
+    
+    @Column(name = "reference_year", nullable = false)
+    private Integer referenceYear;
+    
+    @Column(name = "total_consumption_kwh", nullable = false, precision = 10, scale = 2)
+    private BigDecimal totalConsumptionKwh;
+    
+    @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal totalAmount;
+    
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+    
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+    
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
     
     // Getters and setters
 }
@@ -703,6 +764,28 @@ CREATE TABLE admins (
     CONSTRAINT chk_admin_role CHECK (role IN ('SUPER_ADMIN', 'ADMIN', 'MODERATOR'))
 );
 
+-- Create bills_data table (electricity bills)
+CREATE TABLE bills_data (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID NOT NULL,
+    consultant_id UUID,
+    utility_company_id BIGINT NOT NULL,
+    reference_month INTEGER NOT NULL,
+    reference_year INTEGER NOT NULL,
+    consumer_unit_number VARCHAR(50),
+    installation_number VARCHAR(50),
+    total_consumption_kwh NUMERIC(10,2) NOT NULL,
+    total_amount NUMERIC(10,2) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_bill_client FOREIGN KEY (client_id) REFERENCES clients(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_bill_consultant FOREIGN KEY (consultant_id) REFERENCES consultants(user_id) ON DELETE SET NULL,
+    CONSTRAINT chk_reference_month CHECK (reference_month BETWEEN 1 AND 12),
+    CONSTRAINT chk_reference_year CHECK (reference_year BETWEEN 2020 AND 2100),
+    CONSTRAINT chk_consumption_positive CHECK (total_consumption_kwh > 0),
+    CONSTRAINT chk_amount_positive CHECK (total_amount > 0)
+);
+
 -- Create indexes for performance
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_status ON users(status);
@@ -712,6 +795,10 @@ CREATE INDEX idx_clients_registration_date ON clients(registration_date);
 CREATE INDEX idx_consultants_cnpj ON consultants(cnpj);
 CREATE INDEX idx_consultants_company ON consultants(company);
 CREATE INDEX idx_admins_role ON admins(role);
+CREATE INDEX idx_bills_client_id ON bills_data(client_id);
+CREATE INDEX idx_bills_consultant_id ON bills_data(consultant_id);
+CREATE INDEX idx_bills_reference ON bills_data(reference_year, reference_month);
+CREATE INDEX idx_bills_created_at ON bills_data(created_at);
 
 -- Create updated_at trigger
 CREATE OR REPLACE FUNCTION update_updated_at_column()

@@ -35,20 +35,24 @@
 
 **Attributes:**
 - `userId` (UUID) - Foreign key to User, also primary key
-- `fullName` (String) - Complete name
-- `phone` (String) - Phone number, optional
-- `countryCode` (String) - ISO country code, default "BR"
-- `languagePreference` (String) - UI language, default "pt-BR"
-- `timezone` (String) - User timezone, default "America/Sao_Paulo"
+- `address` (String) - Complete residential address
+- `cpf` (String) - Brazilian individual taxpayer ID, unique
+- `registrationDate` (Date) - Date when client registered
 
 **Relationships:**
-- One-to-Many with BillsData
-- Many-to-Many with Consultant (through ClientConsultantRelation)
+- **One-to-Many with BillsData** - A client can have multiple electricity bills
+- Many-to-Many with Consultant (through ClientConsultantRelation) - A client can be managed by multiple consultants
 
 **Validations:**
-- FullName: Required, min 3 chars, max 255 chars
-- Phone: Valid format for country (if provided)
-- CountryCode: Valid ISO 3166-1 alpha-2
+- Address: Required, max 500 chars
+- CPF: Required, valid format (11 digits), unique
+- RegistrationDate: Automatically set on creation
+
+**Business Rules:**
+- Can view only own bills
+- Can authorize consultants to view their bills
+- CPF must be valid (check digit validation)
+- Each bill belongs to exactly one client
 
 ---
 
@@ -57,27 +61,28 @@
 
 **Attributes:**
 - `userId` (UUID) - Foreign key to User, also primary key
-- `fullName` (String) - Complete name
-- `phone` (String) - Phone number, required
-- `companyName` (String) - Business name
+- `company` (String) - Company name
 - `cnpj` (String) - Brazilian company ID, unique
-- `companyLogoUrl` (String) - S3/storage URL for logo
-- `businessAddress` (String) - Complete address
-- `professionalLicense` (String) - Engineering license number, optional
+- `registrationNumber` (String) - Professional registration number (CREA, etc.)
+- `address` (String) - Complete business address
 
 **Relationships:**
-- Many-to-Many with Client (through ClientConsultantRelation)
-- One-to-Many with BillsData (for client bills they manage)
+- **One-to-Many with BillsData** - A consultant can manage multiple electricity bills for their clients
+- Many-to-Many with Client (through ClientConsultantRelation) - A consultant can have multiple clients
 
 **Validations:**
-- CNPJ: Valid format, unique, 14 digits
-- CompanyName: Required, min 3 chars, max 255 chars
-- Phone: Required, valid format
+- Company: Required, min 3 chars, max 255 chars
+- CNPJ: Required, valid format (14 digits), unique
+- RegistrationNumber: Optional, max 50 chars
+- Address: Required, max 500 chars
 
 **Business Rules:**
 - Can manage multiple clients
-- Can generate branded reports
+- Can view bills of clients they're associated with
+- Can generate branded reports with company information
 - Cannot see other consultants' clients
+- CNPJ must be valid (check digit validation)
+- Bills managed by consultant are associated with the consultant for tracking
 
 ---
 
@@ -146,8 +151,8 @@
 
 **Identification:**
 - `id` (UUID) - Primary key
-- `userId` (UUID) - Foreign key to User (bill owner)
-- `clientId` (UUID) - Foreign key to Client, nullable (for consultant's client)
+- `clientId` (UUID) - Foreign key to Client (bill owner)
+- `consultantId` (UUID) - Foreign key to Consultant, nullable (if managed by consultant)
 - `utilityCompanyId` (Long) - Foreign key to UtilityCompany
 
 **Reference Information:**
@@ -190,8 +195,8 @@
 - `notes` (String) - User notes, optional
 
 **Relationships:**
-- Many-to-One with User
-- Many-to-One with Client (if consultant-managed)
+- **Many-to-One with Client** (required) - Every bill belongs to a client
+- **Many-to-One with Consultant** (optional) - Bill may be managed by a consultant
 - Many-to-One with UtilityCompany
 - One-to-One with EngineeringData
 - One-to-One with AnalysisResults
@@ -204,12 +209,17 @@
 - All monetary values: Positive, 2 decimal places
 - All rate percentages: Between 0 and 100
 - BillingDays: Between 1 and 60
+- ClientId: Required, must reference existing client
+- ConsultantId: Optional, if present must reference existing consultant
 
 **Business Rules:**
-- If consultant creates, must link to one of their clients
+- Every bill must have a client owner (clientId required)
+- If consultantId is present, consultant must have relationship with the client
 - Consumption should match reading difference (warning if not)
 - Total should be calculable from components (warning if discrepancy)
 - Cannot modify after analysis generated (create new version instead)
+- Client can only see their own bills
+- Consultant can only see bills where they are assigned or client relationship exists
 
 ---
 

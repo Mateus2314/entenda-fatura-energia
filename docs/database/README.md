@@ -61,10 +61,10 @@ users (base table)
 ```
 User (abstract)
   ↓ (inherits)
-  ├─ Client ──────► BillsData (1:N)
+  ├─ Client ──────► BillsData (1:N) - owns electricity bills
   │    └─────────► ClientConsultantRelation (M:N)
   │
-  ├─ Consultant ──► BillsData (1:N, managed bills)
+  ├─ Consultant ──► BillsData (1:N) - manages client bills
   │    └─────────► ClientConsultantRelation (M:N)
   │
   └─ Admin (full access)
@@ -73,6 +73,11 @@ BillsData ─────► UtilityCompany (N:1)
          └─────► EngineeringData (1:1)
          └─────► AnalysisResults (1:1)
          └─────► Simulations (1:N)
+
+Key Points:
+- Every bill MUST have a client (client_id NOT NULL)
+- Bills MAY have an associated consultant (consultant_id NULL)
+- Consultants can only see bills where they have a relationship with the client
 ```
 
 ---

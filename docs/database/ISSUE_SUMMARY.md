@@ -121,15 +121,34 @@ CREATE TABLE admins (
 );
 ```
 
+**Bills Data Table:**
+```sql
+CREATE TABLE bills_data (
+    id UUID PRIMARY KEY,
+    client_id UUID NOT NULL,
+    consultant_id UUID,
+    utility_company_id BIGINT NOT NULL,
+    reference_month INTEGER NOT NULL,
+    reference_year INTEGER NOT NULL,
+    total_consumption_kwh NUMERIC(10,2) NOT NULL,
+    total_amount NUMERIC(10,2) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    FOREIGN KEY (client_id) REFERENCES clients(user_id),
+    FOREIGN KEY (consultant_id) REFERENCES consultants(user_id)
+);
+```
+
 ---
 
 ### 5. ✅ Code Examples Provided
 
 **Entity Classes:**
 - `User.java` (abstract base class with @Inheritance)
-- `Client.java` (with @PrimaryKeyJoinColumn)
-- `Consultant.java` (with @PrimaryKeyJoinColumn)
+- `Client.java` (with @PrimaryKeyJoinColumn and @OneToMany to BillsData)
+- `Consultant.java` (with @PrimaryKeyJoinColumn and @OneToMany to BillsData)
 - `Admin.java` (with @PrimaryKeyJoinColumn)
+- `BillData.java` (with @ManyToOne to Client and Consultant)
 
 **Repository Interfaces:**
 - `UserRepository<T>` (generic base)
@@ -150,11 +169,14 @@ CREATE TABLE admins (
 
 **Changes:**
 - Updated `User` entity attributes
-- Updated `Client` entity with new fields
-- Updated `Consultant` entity with new fields
+- Updated `Client` entity with new fields and **relationship with BillsData**
+- Updated `Consultant` entity with new fields and **relationship with BillsData**
 - Updated `Admin` entity with role and permissions
+- Updated `BillsData` entity with correct foreign keys (clientId, consultantId)
 - Added new enumerations (UserStatus, AdminRole)
 - Updated relationships and validations
+- Clarified that each bill must have a client owner
+- Clarified that consultant association is optional
 
 **Updated:** `docs/diagram.md`
 
