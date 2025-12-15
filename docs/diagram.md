@@ -79,8 +79,8 @@ subgraph DB [Banco de Dados - PostgreSQL - JOINED Inheritance]
     BK[(countries)]
     
     note1["users: id, email, password, name, phone, createdAt, updatedAt, status"]
-    note2["clients: user_id, address, cpf, registrationDate"]
-    note3["consultants: user_id, company, cnpj, registrationNumber, address"]
+    note2["clients (Individual-CPF): user_id, address, city, state, zip_code, cpf, registrationDate, createdAt, updatedAt"]
+    note3["consultants (Company-CNPJ): user_id, consultant_name, company, cnpj, registrationNumber, address, city, state, zip_code, companyLogo, createdAt, updatedAt"]
     note4["admins: user_id, role, permissions"]
 end
 

@@ -1,202 +1,79 @@
 # Database Documentation
 
-This directory contains detailed database design documentation for the **Understand Your Electricity Bill** project.
+Database design documentation for the **Understand Your Electricity Bill** project.
 
 ---
 
-## 📁 Documents
+## 📁 Key Documents
 
-### [JPA Inheritance Strategy](jpa-inheritance-strategy.md)
-**Status:** ✅ Approved  
-**Date:** December 2024
-
----
-
-## 📋 Migrations
-
-### V001 - Create Users Base Table
-**Status:** ✅ Implemented and Validated  
-**Date:** 2024-12-14  
-**Script:** `V1__create_user_table.sql`  
-
-**Documentation:**
-- [Migration Documentation](./migrations/V001/migration.md)
-- [Validation Report](./migrations/V001/validation.md)
-- [Validation Queries](./migrations/V001/queries.sql)
-
-**What was created:**
-- Base `users` table (9 columns)
-- ENUMs: `user_type`, `user_status`
-- Constraints: Primary Key, Unique, 2 Check constraints
-- Indexes: 4 performance indexes
-- Trigger: Auto-update `updated_at`
-
-**Next:** V002 - Create `clients` table
-
----  
-
-**Content:**
-- Research on 3 JPA inheritance strategies (SINGLE_TABLE, JOINED, TABLE_PER_CLASS)
-- Detailed pros and cons analysis
-- Decision matrix with weighted criteria
-- **Decision: JOINED strategy** selected
-- Complete implementation guidelines
-- Code examples (Entity classes, Repositories, Services)
-- Database schema (SQL DDL)
-- Migration scripts (Flyway)
-- Performance considerations
-- Testing strategies
-
-**Why JOINED:**
-- Data normalization (no NULL columns)
-- Strong database constraints
-- Scalable for future user types
-- Clean separation of concerns
-- Acceptable performance trade-off
+- **[ER_DIAGRAM.md](ER_DIAGRAM.md)** - Visual ER model (⭐ PRIMARY REFERENCE)
+- **[jpa-inheritance-strategy.md](jpa-inheritance-strategy.md)** - JPA JOINED strategy
+- **[ALTERACOES_MODELO_V2.md](ALTERACOES_MODELO_V2.md)** - Recent changes log
+- **[migrations/](migrations/)** - Flyway migration files
 
 ---
 
-## 🗄️ Database Schema Overview
-
-### User Domain (JOINED Inheritance)
+## 🗄️ Schema Overview (JOINED Inheritance)
 
 ```
-users (base table)
-├── clients (specific attributes)
-├── consultants (specific attributes)
-└── admins (specific attributes)
+users (base)
+├── clients (CPF - individual)
+├── consultants (CNPJ - company)
+└── admins
 ```
 
-**users table:**
-- id, email, password, name, phone, createdAt, updatedAt, status
+**Key Difference:**
+- **Clients:** CPF (pessoa física), own bills
+- **Consultants:** CNPJ (pessoa jurídica), manage bills, have company_logo
 
-**clients table:**
-- user_id (FK), address, cpf, registrationDate
-
-**consultants table:**
-- user_id (FK), company, cnpj, registrationNumber, address
-
-**admins table:**
-- user_id (FK), role, permissions
+**Both have:** address, city, state, zip_code, created_at, updated_at
 
 ---
 
-## 📊 Entity Relationship Diagram
+## 📊 Main Relationships
 
 ```
-User (abstract)
-  ↓ (inherits)
-  ├─ Client ──────► BillsData (1:N) - owns electricity bills
-  │    └─────────► ClientConsultantRelation (M:N)
-  │
-  ├─ Consultant ──► BillsData (1:N) - manages client bills
-  │    └─────────► ClientConsultantRelation (M:N)
-  │
-  └─ Admin (full access)
-
-BillsData ─────► UtilityCompany (N:1)
-         └─────► EngineeringData (1:1)
-         └─────► AnalysisResults (1:1)
-         └─────► Simulations (1:N)
-
-Key Points:
-- Every bill MUST have a client (client_id NOT NULL)
-- Bills MAY have an associated consultant (consultant_id NULL)
-- Consultants can only see bills where they have a relationship with the client
+Clients ──1:N──► ElectricityBills
+Consultants ──1:N──► ElectricityBills
+Tariffs ──1:N──► ElectricityBills (⭐ required)
+ElectricityBills ──1:N──► BillItems
+ElectricityBills ──1:1──► Analyses
 ```
 
 ---
 
-## 🔧 Technology Stack
+## 🔧 Tech Stack
 
-- **Database:** PostgreSQL 15+
-- **ORM:** Hibernate (via Spring Data JPA)
+- **DB:** PostgreSQL 15+
+- **ORM:** Hibernate (Spring Data JPA)
 - **Migrations:** Flyway
-- **Connection Pool:** HikariCP
-- **Testing:** Testcontainers + PostgreSQL
+- **Testing:** Testcontainers
 
 ---
 
 ## 📝 Conventions
 
-### Naming
-- Tables: lowercase with underscores (e.g., `users`, `bill_data`)
-- Columns: lowercase with underscores (e.g., `created_at`, `user_id`)
-- Foreign keys: `{entity}_id` (e.g., `user_id`, `bill_id`)
-- Indexes: `idx_{table}_{column}` (e.g., `idx_users_email`)
-- Constraints: `fk_{child}_{parent}` (e.g., `fk_client_user`)
-
-### Data Types
-- Primary keys: `UUID`
-- Timestamps: `TIMESTAMP` (UTC)
-- Dates: `DATE`
-- Enums: `VARCHAR(50)` stored as strings
-- Money: `NUMERIC(10,2)` in BRL
-- JSON: `JSONB` for flexible data
+- **Tables:** snake_case (e.g., `electricity_bills`)
+- **PKs:** UUID
+- **Timestamps:** TIMESTAMP UTC
+- **Money:** NUMERIC(10,2)
+- **FKs:** `{entity}_id`
 
 ---
 
-## 🔐 Security Considerations
+## 🚀 Quick Start
 
-- Passwords: BCrypt hashed, never stored in plain text
-- Sensitive data: Encrypted at rest (future)
-- Connection: TLS/SSL for production
-- Credentials: Stored in `.env` files, never in code
-- Audit logs: Immutable, retained for 1+ year
+```bash
+# Start PostgreSQL
+docker-compose up -d postgres
 
----
-
-## 🚀 Getting Started
-
-### Local Development Setup
-
-1. **Start PostgreSQL with Docker:**
-   ```bash
-   docker-compose up -d postgres
-   ```
-
-2. **Database Configuration:**
-   ```yaml
-   # application.yaml
-   spring:
-     datasource:
-       url: jdbc:postgresql://localhost:5432/electricity_bill_db
-       username: ${DB_USER}
-       password: ${DB_PASSWORD}
-     jpa:
-       hibernate:
-         ddl-auto: validate  # Use Flyway for schema
-       show-sql: true
-   ```
-
-3. **Run Migrations:**
-   ```bash
-   mvn flyway:migrate
-   ```
+# Run migrations
+mvn flyway:migrate
+```
 
 ---
 
-## 📚 Related Documentation
-
-- [Data Models](../scopo/07_data_models.md) - Complete entity specifications
-- [Business Rules](../scopo/09_business_rules.md) - Validation rules
-- [API Endpoints](../scopo/08_api_endpoints.md) - REST API specs
-
----
-
-## 🧪 Testing
-
-### Integration Tests with Testcontainers
-
-```java
-@DataJpaTest
-@Testcontainers
-class DatabaseIntegrationTest {
-    @Container
-    static PostgreSQLContainer<?> postgres = 
-        new PostgreSQLContainer<>("postgres:15-alpine");
-    
-    // Tests...
+**See [ER_DIAGRAM.md](ER_DIAGRAM.md) for complete visual reference.**
 }
 ```
 
