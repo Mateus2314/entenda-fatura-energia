@@ -19,14 +19,15 @@ Database design documentation for the **Understand Your Electricity Bill** proje
 users (base)
 ├── clients (CPF - individual)
 ├── consultants (CNPJ - company)
-└── admins
+└── admins (role, permissions)
 ```
 
-**Key Difference:**
-- **Clients:** CPF (pessoa física), own bills
-- **Consultants:** CNPJ (pessoa jurídica), manage bills, have company_logo
+**Key Differences:**
+- **Clients:** CPF (pessoa física), own bills, address info
+- **Consultants:** CNPJ (pessoa jurídica), manage bills, company_logo, address info
+- **Admins:** Role-based access, JSONB permissions, no address/documents
 
-**Both have:** address, city, state, zip_code, created_at, updated_at
+**Shared:** created_at, updated_at (all types)
 
 ---
 
