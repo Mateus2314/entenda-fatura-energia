@@ -3,6 +3,8 @@
 **Decision:** JOINED strategy for User hierarchy  
 **Reason:** Normalized, strong constraints, scalable
 
+> 📖 **For implementation details and code examples:** See [jpa-entity-modeling.md](jpa-entity-modeling.md)
+
 ---
 
 ## User Hierarchy
@@ -88,182 +90,47 @@ CREATE TABLE admins (
 
 ---
 
-## JPA Entities
+## JPA Implementation Quick Reference
 
-### Base Entity
+### Base Entity Pattern
 
 ```java
 @Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "user_type")
 public abstract class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
     
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(nullable = false, unique = true)
     private String email;
     
-    @Column(nullable = false, length = 255)
-    private String password;
-    
-    @Column(nullable = false, length = 255)
-    private String name;
-    
-    @Column(length = 50)
-    private String phone;
-    
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
-    private UserStatus status;
-    
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        if (status == null) status = UserStatus.PENDING_VERIFICATION;
-    }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-    
-    // Getters and setters
+    // ... other common fields
 }
 ```
 
-### Client Entity
+### Subclass Pattern
 
 ```java
 @Entity
 @Table(name = "clients")
 @PrimaryKeyJoinColumn(name = "user_id")
+@DiscriminatorValue("CLIENT")
 public class Client extends User {
-    @Column(nullable = false, length = 500)
-    private String address;
-    
-    @Column(length = 100)
-    private String city;
-    
-    @Column(length = 2)
-    private String state;
-    
-    @Column(name = "zip_code", length = 10)
-    private String zipCode;
-    
-    @Column(nullable = false, length = 11, unique = true)
+    @Column(nullable = false, unique = true, length = 11)
     private String cpf;
     
-    @Column(name = "registration_date", nullable = false)
-    private LocalDate registrationDate;
-    
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-    
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
-    private List<ElectricityBill> bills = new ArrayList<>();
+    private List<ElectricityBill> bills;
     
-    @PrePersist
-    protected void onClientCreate() {
-        if (registrationDate == null) registrationDate = LocalDate.now();
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-    
-    @PreUpdate
-    protected void onClientUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-    
-    // Getters and setters
+    // ... other client-specific fields
 }
 ```
 
-### Consultant Entity
-
-```java
-@Entity
-@Table(name = "consultants")
-@PrimaryKeyJoinColumn(name = "user_id")
-public class Consultant extends User {
-    @Column(name = "consultant_name", nullable = false, length = 255)
-    private String consultantName;
-    
-    @Column(nullable = false, length = 255)
-    private String company;
-    
-    @Column(nullable = false, length = 14, unique = true)
-    private String cnpj;
-    
-    @Column(name = "registration_number", length = 50)
-    private String registrationNumber;
-    
-    @Column(nullable = false, length = 500)
-    private String address;
-    
-    @Column(length = 100)
-    private String city;
-    
-    @Column(length = 2)
-    private String state;
-    
-    @Column(name = "zip_code", length = 10)
-    private String zipCode;
-    
-    @Column(name = "company_logo", columnDefinition = "TEXT")
-    private String companyLogo;
-    
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-    
-    @OneToMany(mappedBy = "consultant", cascade = CascadeType.ALL)
-    private List<ElectricityBill> managedBills = new ArrayList<>();
-    
-    @PrePersist
-    protected void onConsultantCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-    
-    @PreUpdate
-    protected void onConsultantUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-    
-    // Getters and setters
-}
-```
-
-### Admin Entity
-
-```java
-@Entity
-@Table(name = "admins")
-@PrimaryKeyJoinColumn(name = "user_id")
-public class Admin extends User {
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
-    private AdminRole role;
-    
-    @Column(columnDefinition = "JSONB")
-    private String permissions;
-    
-    // Getters and setters
-}
-```
+> 📖 **Complete entity implementations, relationships, and best practices:**  
+> See [jpa-entity-modeling.md](jpa-entity-modeling.md)
 
 ---
 
@@ -296,6 +163,20 @@ public interface AdminRepository extends JpaRepository<Admin, UUID> {
 - Client: CPF (individual), owns bills
 - Consultant: CNPJ (company), manages bills, has company_logo
 - Both: Complete address fields (address, city, state, zip_code)
+
+---
+
+## Database Migrations
+
+- **V001:** users table → [Migration Details](migrations/V001.md)
+- **V002:** clients table → [Migration Details](migrations/V002.md)
+- **V003:** consultants table → [Migration Details](migrations/V003.md)
+- **V004:** admins table → [Migration Details](migrations/V004.md)
+
+---
+
+**Last Updated:** 2025-12-16  
+**Status:** ✅ Implemented
 
 **Relationships:**
 - Client → ElectricityBills (1:N)

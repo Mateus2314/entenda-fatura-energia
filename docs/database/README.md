@@ -7,7 +7,8 @@ Database design documentation for the **Understand Your Electricity Bill** proje
 ## 📁 Key Documents
 
 - **[ER_DIAGRAM.md](ER_DIAGRAM.md)** - Visual ER model (⭐ PRIMARY REFERENCE)
-- **[jpa-inheritance-strategy.md](jpa-inheritance-strategy.md)** - JPA JOINED strategy
+- **[jpa-entity-modeling.md](jpa-entity-modeling.md)** - JPA best practices & implementation guide
+- **[jpa-inheritance-strategy.md](jpa-inheritance-strategy.md)** - JPA JOINED strategy (quick reference)
 - **[ALTERACOES_MODELO_V2.md](ALTERACOES_MODELO_V2.md)** - Recent changes log
 - **[migrations/](migrations/)** - Flyway migration files
 
