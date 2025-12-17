@@ -1,13 +1,18 @@
 package com.understand_your_electricity_bill.model;
 
 
+import com.understand_your_electricity_bill.model.enums.UserStatus;
 import com.understand_your_electricity_bill.model.enums.UserType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -24,38 +29,49 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NotNull(message = "Email cannot be null")
-    @Email(message = "Email should be valid")
-    @Column(unique = true, nullable = false)
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be valid")
+    @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+            message = "Email format is invalid")
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @NotNull(message = "Password hash cannot be null")
+    @NotBlank(message = "Password hash is required")
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @NotNull(message = "User type cannot be null")
+    @NotNull(message = "User type is required")
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type", nullable = false)
     private UserType userType;
 
-    @Column(nullable = false)
+    @NotBlank(message = "Name is required")
+    @Column(name = "name", nullable = false)
     private String name;
 
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$",
+            message = "Phone must contain 10-15 digits and may start with +")
+    @Column(name = "phone", length = 20)
+    private String phone;
+
+    @NotNull(message = "Status is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private UserStatus status = UserStatus.PENDING_VERIFICATION;
+
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        if (this.status == null) {
+            this.status = UserStatus.PENDING_VERIFICATION;
+        }
     }
 
 }
