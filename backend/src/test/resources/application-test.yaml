@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASS}
+    url: jdbc:postgresql://localhost:5433/energia
+    username: root
+    password: Un890341@
     driver-class-name: org.postgresql.Driver
 
   jpa:
