@@ -15,7 +15,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ConsultantTest {
+class ConsultantTest {
 
     private ValidatorFactory factory;
     private Validator validator;
