@@ -18,6 +18,31 @@ class ClientTest {
     private final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     private final Validator validator = factory.getValidator();
 
+    /**
+     * Helper method to create a valid Client instance for testing.
+     *
+     * @return A fully configured Client with all required fields
+     */
+    private Client createValidClient() {
+        Client client = new Client();
+
+        // Campos herdados de User
+        client.setEmail("client@example.com");
+        client.setPasswordHash("hashedPassword123");
+        client.setName("Test Client");
+        client.setPhone("+5511987654321");
+
+        // Campos específicos de Client
+        client.setAddress("Rua Exemplo, 123");
+        client.setCity("São Paulo");
+        client.setState("SP");
+        client.setZipCode("01234-567");
+        client.setCpf("12345678901");
+        client.setRegistrationDate(LocalDate.now());
+
+        return client;
+    }
+
     @Test
     @DisplayName("Should create Client with all required fields")
     void shouldCreateClientWithRequiredFields() {
@@ -111,6 +136,107 @@ class ClientTest {
         assertEquals("João Silva", client.getName());
         assertEquals(UserType.CLIENT, client.getUserType());
     }
+
+    @Test
+    @DisplayName("Should validate city when provided")
+    void shouldValidateCityWhenProvided() {
+        Client client = createValidClient();
+        client.setCity("São Paulo");
+
+        Set<ConstraintViolation<Client>> violations = validator.validate(client);
+
+        assertTrue(violations.isEmpty());
+        assertEquals("São Paulo", client.getCity());
+    }
+
+    @Test
+    @DisplayName("Should reject city exceeding 100 characters")
+    void shouldRejectCityExceedingMaxLength() {
+        Client client = createValidClient();
+        client.setCity("A".repeat(101)); // 101 caracteres
+
+        Set<ConstraintViolation<Client>> violations = validator.validate(client);
+
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getMessage().contains("City must not exceed 100 characters")));
+    }
+
+    @Test
+    @DisplayName("Should validate state when provided")
+    void shouldValidateStateWhenProvided() {
+        Client client = createValidClient();
+        client.setState("SP");
+
+        Set<ConstraintViolation<Client>> violations = validator.validate(client);
+
+        assertTrue(violations.isEmpty());
+        assertEquals("SP", client.getState());
+    }
+
+    @Test
+    @DisplayName("Should reject state not matching 2 characters")
+    void shouldRejectInvalidStateFormat() {
+        Client client = createValidClient();
+        client.setState("SAO"); // 3 caracteres - inválido
+
+        Set<ConstraintViolation<Client>> violations = validator.validate(client);
+
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getMessage().contains("State must be 2 characters")));
+    }
+
+    @Test
+    @DisplayName("Should validate zipCode in correct format")
+    void shouldValidateZipCodeInCorrectFormat() {
+        Client client = createValidClient();
+        client.setZipCode("12345-678");
+
+        Set<ConstraintViolation<Client>> violations = validator.validate(client);
+
+        assertTrue(violations.isEmpty());
+        assertEquals("12345-678", client.getZipCode());
+    }
+
+    @Test
+    @DisplayName("Should validate zipCode without hyphen")
+    void shouldValidateZipCodeWithoutHyphen() {
+        Client client = createValidClient();
+        client.setZipCode("12345678");
+
+        Set<ConstraintViolation<Client>> violations = validator.validate(client);
+
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Should reject invalid zipCode format")
+    void shouldRejectInvalidZipCodeFormat() {
+        Client client = createValidClient();
+        client.setZipCode("123"); // Formato inválido
+
+        Set<ConstraintViolation<Client>> violations = validator.validate(client);
+
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getMessage().contains("ZIP code must be in format")));
+    }
+
+    @Test
+    @DisplayName("Should accept null optional fields")
+    void shouldAcceptNullOptionalFields() {
+        Client client = createValidClient();
+        client.setCity(null);
+        client.setState(null);
+        client.setZipCode(null);
+
+        Set<ConstraintViolation<Client>> violations = validator.validate(client);
+
+        assertTrue(violations.isEmpty());
+    }
+
+
 
 
     @Test

@@ -22,6 +22,18 @@ public class Client extends User {
     @Column(name = "address", nullable = false, length = 500)
     private String address;
 
+    @Size(max = 100, message = "City must not exceed 100 characters")
+    @Column(name = "city", length = 100)
+    private String city;
+
+    @Size(max = 2, message = "State must be 2 characters (e.g., SP)")
+    @Column(name = "state", length = 2)
+    private String state;
+
+    @Pattern(regexp = "^\\d{5}-?\\d{3}$", message = "ZIP code must be in format 12345-678")
+    @Column(name = "zip_code", length = 10)
+    private String zipCode;
+
     @NotBlank(message = "CPF is required")
     @Pattern(regexp = "^\\d{11}$", message = "CPF must contain exactly 11 digits")
     @Column(name = "cpf", nullable = false, unique = true, length = 11)
