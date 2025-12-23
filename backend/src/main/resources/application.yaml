@@ -27,3 +27,11 @@ spring:
 
 server:
   port: 8081
+
+application:
+  security:
+    jwt:
+      # Chave secreta para testes (codificada em Base64 para garantir o comprimento mínimo para o algoritmo HS256).
+      secret: "c2VjcmV0LWtleS1mb3Itand0LXRlc3RpbmctZW52aXJvbm1lbnQtbXVzdC1iZS1sb25nLWVub3VnaA=="
+      # Tempo de expiração mais curto para testes (1 hora).
+      expiration: 3600000

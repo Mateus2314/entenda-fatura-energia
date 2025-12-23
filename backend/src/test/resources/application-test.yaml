@@ -17,9 +17,13 @@ spring:
             non_contextual_creation: true
 
   flyway:
-    enabled: true
-    clean-disabled: false
-    baseline-on-migrate: true
+    enabled: false
+
+application:
+  security:
+    jwt:
+      secret-key: "c2VjcmV0LWtleS1mb3Itand0LXRlc3RpbmctZW52aXJvbm1lbnQtbXVzdC1iZS1sb25nLWVub3VnaA==" # Chave para testes
+      expiration: 60000 # Tempo curto para testes (1 minuto)
 
 server:
   port: 8081
