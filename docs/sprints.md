@@ -142,6 +142,94 @@ backend/src/test/java/com/understand_your_electricity_bill/model/
 
 ---
 
+### Issue #1.1: Implement BillItem and Analysis Entities
+
+**Title:** [DOMAIN] Implement BillItem and Analysis child entities
+
+**Description:**  
+Implement child entities that depend on ElectricityBill. BillItem stores line items of a bill (consumption, taxes, fees), and Analysis stores calculated analysis results and recommendations.
+
+**Priority:** HIGH  
+**Estimated Time:** 4-6 hours
+
+**Acceptance Criteria:**
+
+- ✅ **BillItem Entity**:
+  - `id` (UUID, PK)
+  - `bill_id` (FK → electricity_bills.id, NOT NULL)
+  - `item_type` (String, 50, NOT NULL) - E.g., "OFF_PEAK_CONSUMPTION", "ICMS_TAX"
+  - `description` (String, 255, nullable)
+  - `quantity` (BigDecimal, nullable, precision=10, scale=2)
+  - `unit_price` (BigDecimal, nullable, precision=10, scale=4)
+  - `amount` (BigDecimal, NOT NULL, precision=10, scale=2)
+  - `created_at` (timestamp)
+
+- ✅ **Analysis Entity**:
+  - `id` (UUID, PK)
+  - `bill_id` (FK → electricity_bills.id, NOT NULL, UNIQUE)
+  - `average_consumption` (BigDecimal, nullable, precision=10, scale=2)
+  - `cost_per_kwh` (BigDecimal, nullable, precision=10, scale=4)
+  - `comparison_prev_month` (BigDecimal, nullable, precision=5, scale=2)
+  - `savings_tips` (TEXT, nullable)
+  - `report_pdf_url` (TEXT, nullable)
+  - `created_at` (timestamp)
+
+- ✅ **Relationships**:
+  - `BillItem` @ManyToOne → `ElectricityBill` (many items per bill)
+  - `Analysis` @OneToOne → `ElectricityBill` (one analysis per bill)
+  - ElectricityBill @OneToMany → BillItem (cascade=ALL, orphanRemoval=true)
+  - ElectricityBill @OneToOne → Analysis (cascade=ALL, orphanRemoval=true)
+
+- ✅ **Indexes**:
+  - `idx_bill_items_bill_id` on (bill_id)
+  - `idx_analyses_bill_id` on (bill_id)
+
+- ✅ **Validation Constraints**:
+  - `@NotNull` on required fields (bill, itemType, amount)
+  - `@NotBlank` on itemType
+  - `@DecimalMin("0.0")` for monetary values
+  - `@Size` constraints on text fields
+
+- ✅ **Unit Tests** (BillItemTest, AnalysisTest):
+  - Test field validations
+  - Test relationship mappings
+  - Test cascade operations
+  - Test orphan removal
+
+- ✅ **Integration Tests** with Testcontainers:
+  - Test persistence
+  - Test bidirectional relationships
+  - Test cascade delete
+
+**Files to Create:**
+```
+backend/src/main/java/com/understand_your_electricity_bill/model/
+├── BillItem.java           (NEW)
+└── Analysis.java           (NEW)
+
+backend/src/test/java/com/understand_your_electricity_bill/model/
+├── BillItemTest.java       (NEW)
+└── AnalysisTest.java       (NEW)
+```
+
+**Files to Update:**
+```
+backend/src/main/java/com/understand_your_electricity_bill/model/
+└── ElectricityBill.java    (UNCOMMENT relationships)
+```
+
+**References:**
+- `docs/database/ER_DIAGRAM.md` (BILL_ITEMS and ANALYSES tables)
+- `docs/database/jpa-entity-modeling.md` (section: Child Entities)
+
+**Technical Notes:**
+- BillItem is a **weak entity** - cannot exist without ElectricityBill
+- Analysis has **one-to-one** relationship with unique constraint
+- Both use **cascade ALL** with orphan removal
+- No update timestamps - both entities are immutable once created
+
+---
+
 ### Issue #2: Implement Repositories - Tariff and ElectricityBill
 
 **Title:** [REPOSITORY] Implement repositories with custom queries for Tariff and ElectricityBill
@@ -700,32 +788,35 @@ backend/src/test/java/com/understand_your_electricity_bill/security/
 
 | Phase | Issues | Estimated Hours | Priority |
 |-------|--------|-----------------|----------|
-| PHASE 1: Domain Layer | 2 | 14-18 | HIGH |
+| PHASE 1: Domain Layer | 3 (1 + 1.1 + 2) | 18-24 (+4-6 for BillItem/Analysis) | HIGH |
 | PHASE 2: DTOs/Mappers | 2 | 7-9 | MEDIUM |
 | PHASE 3: Service Layer | 2 | 16-20 (+2 for flags) | HIGH |
 | PHASE 4: Controllers | 2 | 10-13 | MEDIUM-HIGH |
 | PHASE 5: Migrations | 1 | 3-4 | HIGH |
 | PHASE 6: Security | 1 | 4-5 | HIGH |
 | PHASE 7: Frontend | 3 | 17-21 | MEDIUM-HIGH |
-| **TOTAL** | **13** | **71-90** | - |
+| **TOTAL** | **14** | **75-96** | - |
 
 **Notes:** 
 - Issue #5 increased from 8-10h to 10-12h due to dual ANEEL API integration (tariffs + flags)
+- Issue #1.1 added for BillItem and Analysis entities (4-6h)
 - Tariff entity expanded from 17 to 21 fields
+- Total entities: 8 (User, Client, Consultant, Admin, Tariff, ElectricityBill, BillItem, Analysis)
 
 ---
 
 ## 🎯 Current Focus
 
 **Next Immediate Tasks:**
-1. ✅ Complete documentation updates (jpa-entity-modeling.md, ER_DIAGRAM.md, sprints.md) - DONE
-2. 🔄 **Issue #1** - Implement Tariff (21 fields) and ElectricityBill entities - IN PROGRESS
-3. Issue #2 - Implement repositories
-4. Issue #5 - ANEEL dual API integration (Tariffs + Flags)
+1. ✅ Complete documentation updates (all 3 docs) - DONE
+2. ✅ **Issue #1** - Tariff (21 fields) and ElectricityBill entities - DONE
+3. ✅ **Issue #1.1** - BillItem and Analysis entities - DONE
+4. 🔄 Create unit tests for BillItem and Analysis - IN PROGRESS
+5. Issue #2 - Implement repositories
 
 ---
 
 **Last Updated:** 2025-12-26  
-**Roadmap Version:** 2.1 (Added Tariff Flags - Bandeiras Tarifárias)  
-**Status:** ✅ Ready for Implementation
+**Roadmap Version:** 2.2 (BillItem and Analysis entities implemented)  
+**Status:** ✅ All domain entities complete, ready for tests
 

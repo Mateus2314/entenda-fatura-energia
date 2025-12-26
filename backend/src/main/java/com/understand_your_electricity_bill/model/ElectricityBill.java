@@ -72,6 +72,14 @@ public class ElectricityBill {
     @Column(name = "pdf_url", columnDefinition = "TEXT")
     private String pdfUrl;
 
+    @Size(max = 50, message = "Installation number must not exceed 50 characters")
+    @Column(name = "installation_number", length = 50)
+    private String installationNumber;
+
+    @Size(max = 100, message = "Invoice number must not exceed 100 characters")
+    @Column(name = "invoice_number", length = 100)
+    private String invoiceNumber;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -81,11 +89,11 @@ public class ElectricityBill {
     private LocalDateTime updatedAt;
 
     // Child Relationships
-//    @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-//    private List<BillItem> items = new ArrayList<>();
+    @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<BillItem> items = new ArrayList<>();
 
-//    @OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-//    private Analysis analysis;
+    @OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Analysis analysis;
 
     /**
      * Calcula o custo por kWh baseado na tarifa aplicada
@@ -117,19 +125,19 @@ public class ElectricityBill {
      * Adiciona um item à fatura e mantém consistência bidirecional
      * @param item Item a ser adicionado
      */
-//    public void addItem(BillItem item) {
-//        items.add(item);
-//        item.setBill(this);
-//    }
-//
-//    /**
-//     * Remove um item da fatura e mantém consistência bidirecional
-//     * @param item Item a ser removido
-//     */
-//    public void removeItem(BillItem item) {
-//        items.remove(item);
-//        item.setBill(null);
-//    }
+    public void addItem(BillItem item) {
+        items.add(item);
+        item.setBill(this);
+    }
+
+    /**
+     * Remove um item da fatura e mantém consistência bidirecional
+     * @param item Item a ser removido
+     */
+    public void removeItem(BillItem item) {
+        items.remove(item);
+        item.setBill(null);
+    }
 
     /**
      * Valida se a data de vencimento é posterior ao mês de referência
@@ -139,14 +147,5 @@ public class ElectricityBill {
     public boolean isValidDueDate() {
         return dueDate.isAfter(referenceMonth);
     }
-
-    @Size(max = 50, message = "Installation number must not exceed 50 characters")
-    @Column(name = "installation_number", length = 50)
-    private String installationNumber;
-
-    @Size(max = 100, message = "Invoice number must not exceed 100 characters")
-    @Column(name = "invoice_number", length = 100)
-    private String invoiceNumber;
-
 
 }

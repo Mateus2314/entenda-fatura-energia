@@ -888,23 +888,202 @@ public interface TariffRepository extends JpaRepository<Tariff, UUID> {
 }
 ```
 
-### Best Practices Summary
+---
 
-| Practice | Rationale |
-|----------|-----------|
-| ✅ **Use String for API fields** | Flexibility for changing API values |
-| ✅ **Store complete snapshots** | Preserve historical data |
-| ✅ **Scheduled sync (not real-time)** | Performance and reliability |
-| ✅ **Custom parsing for formats** | Handle comma decimals, "Não se aplica" |
-| ✅ **Immutable tariff references** | Bills keep original tariff (snapshot) |
-| ✅ **Comprehensive indexes** | Fast queries by distributor, date, modality |
-| ✅ **Validation before save** | Filter invalid/test records |
-| ✅ **Dual API sync (tariffs + flags)** | Enrich tariffs with flag data ⭐ NEW |
-| ✅ **Nullable flag fields** | Older records may not have flag data ⭐ NEW |
-| ✅ **Match by competence_date** | Flag month = bill reference_month ⭐ NEW |
-| ❌ **Don't use ENUMs** | Avoid rigid constraints |
-| ❌ **Don't store redundant data** | Single source of truth (tariff table) |
-| ❌ **Don't query API per request** | Use local database |
+## 6. Child Entities - BillItem and Analysis ⭐ NEW
+
+### BillItem Entity (Line Items)
+
+**Purpose:** Detailed breakdown of electricity bill charges (consumption, taxes, fees).
+
+**Design Pattern:** Weak Entity (depends on ElectricityBill)
+
+```java
+@Entity
+@Table(name = "bill_items", indexes = {
+    @Index(name = "idx_bill_items_bill_id", columnList = "bill_id")
+})
+public class BillItem {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+    
+    // Parent relationship - REQUIRED
+    @NotNull(message = "Bill is required")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "bill_id", nullable = false)
+    private ElectricityBill bill;
+    
+    // Item classification
+    @NotBlank
+    @Size(max = 50)
+    @Column(name = "item_type", nullable = false)
+    private String itemType; // E.g., "OFF_PEAK_CONSUMPTION", "ICMS_TAX", "FLAG_CHARGE"
+    
+    @Size(max = 255)
+    @Column(name = "description")
+    private String description;
+    
+    // Values
+    @DecimalMin("0.0")
+    @Column(name = "quantity", precision = 10, scale = 2)
+    private BigDecimal quantity; // kWh consumed, units, etc.
+    
+    @DecimalMin("0.0")
+    @Column(name = "unit_price", precision = 10, scale = 4)
+    private BigDecimal unitPrice; // Price per unit
+    
+    @NotNull
+    @DecimalMin("0.0")
+    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal amount; // Total: quantity * unitPrice
+    
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+}
+```
+
+**Key Characteristics:**
+- ✅ **Weak entity**: Cannot exist without ElectricityBill
+- ✅ **Cascade DELETE**: When bill is deleted, items are deleted (orphanRemoval = true)
+- ✅ **No UPDATE timestamp**: Items are immutable once created
+- ✅ **Flexible itemType**: String instead of ENUM for extensibility
+
+**Bidirectional Relationship in ElectricityBill:**
+```java
+@OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, orphanRemoval = true)
+private List<BillItem> items = new ArrayList<>();
+
+public void addItem(BillItem item) {
+    items.add(item);
+    item.setBill(this); // Maintain bidirectional consistency
+}
+```
+
+**Common Item Types:**
+- Consumption charges: `OFF_PEAK_CONSUMPTION`, `PEAK_CONSUMPTION`
+- Tariff components: `TUSD_CHARGE`, `TE_CHARGE`
+- Flags: `FLAG_CHARGE`
+- Taxes: `ICMS_TAX`, `PIS_TAX`, `COFINS_TAX`
+- Others: `PUBLIC_LIGHTING`, `DISCOUNT`, `CREDIT`
+
+---
+
+### Analysis Entity (Bill Analysis)
+
+**Purpose:** Store analysis results and recommendations for an electricity bill.
+
+**Design Pattern:** One-to-One dependent relationship
+
+```java
+@Entity
+@Table(name = "analyses", indexes = {
+    @Index(name = "idx_analyses_bill_id", columnList = "bill_id")
+})
+public class Analysis {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+    
+    // One-to-One with ElectricityBill
+    @NotNull
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "bill_id", nullable = false, unique = true)
+    private ElectricityBill bill;
+    
+    // Calculated metrics
+    @Column(name = "average_consumption", precision = 10, scale = 2)
+    private BigDecimal averageConsumption; // Average kWh over period
+    
+    @Column(name = "cost_per_kwh", precision = 10, scale = 4)
+    private BigDecimal costPerKwh; // Calculated from bill
+    
+    @Column(name = "comparison_prev_month", precision = 5, scale = 2)
+    private BigDecimal comparisonPrevMonth; // % change vs previous month
+    
+    // Recommendations
+    @Column(name = "savings_tips", columnDefinition = "TEXT")
+    private String savingsTips; // JSON or plain text recommendations
+    
+    @Column(name = "report_pdf_url", columnDefinition = "TEXT")
+    private String reportPdfUrl; // Path to generated PDF report
+    
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+}
+```
+
+**Key Characteristics:**
+- ✅ **One-to-One**: Each bill has at most ONE analysis
+- ✅ **Optional**: Bill can exist without analysis
+- ✅ **Unique constraint**: `bill_id` is unique (enforced by @OneToOne)
+- ✅ **Immutable**: No update timestamp (analyses are snapshots)
+- ✅ **Lazy loading**: Analysis loaded only when accessed
+
+**Bidirectional Relationship in ElectricityBill:**
+```java
+@OneToOne(mappedBy = "bill", cascade = CascadeType.ALL, orphanRemoval = true)
+private Analysis analysis;
+```
+
+**⚠️ Important Note on @OneToOne Lazy Loading:**
+
+JPA specification states that the **non-owning side** of @OneToOne cannot be truly lazy loaded. Even with `FetchType.LAZY`, Hibernate may fetch it eagerly.
+
+**Workaround if performance is critical:**
+```java
+// Option 1: Use @MapsId to optimize
+@OneToOne
+@MapsId
+@JoinColumn(name = "bill_id")
+private ElectricityBill bill;
+
+// Option 2: Use bytecode instrumentation (Hibernate)
+// Add to hibernate.properties:
+// hibernate.bytecode.use_reflection_optimizer=true
+```
+
+**For this project:** Accept eager loading on non-owning side. Analysis is small and rarely accessed without bill context.
+
+---
+
+### Cascade Strategies for Child Entities
+
+| Entity | Cascade Type | Orphan Removal | Rationale |
+|--------|--------------|----------------|-----------|
+| **BillItem** | `ALL` | `true` | Items cannot exist without bill |
+| **Analysis** | `ALL` | `true` | Analysis cannot exist without bill |
+
+**What happens when ElectricityBill is deleted:**
+1. All `BillItem` records are deleted (cascade + orphan removal)
+2. Associated `Analysis` is deleted (cascade + orphan removal)
+3. Foreign key constraints prevent deletion if references exist elsewhere
+
+**Orphan Removal Example:**
+```java
+ElectricityBill bill = billRepository.findById(id);
+bill.getItems().clear(); // Orphan removal triggers DELETE for all items
+billRepository.save(bill);
+```
+
+---
+
+### Validation Best Practices
+
+**BillItem Validations:**
+- ✅ `@NotNull` on `bill`, `itemType`, `amount`
+- ✅ `@NotBlank` on `itemType` (not just NotNull)
+- ✅ `@DecimalMin("0.0")` for monetary values
+- ✅ `@Size` constraints on text fields
+
+**Analysis Validations:**
+- ✅ `@NotNull` on `bill` (required relationship)
+- ✅ All numeric fields nullable (optional metrics)
+- ✅ TEXT columns for large content (`savingsTips`, `reportPdfUrl`)
 
 ---
 
@@ -940,25 +1119,8 @@ JPA cascade is optional but adds safety:
 
 ---
 
-## References
-
-### Official Documentation
-- [Jakarta Persistence Specification](https://jakarta.ee/specifications/persistence/3.1/)
-- [Hibernate ORM Documentation](https://hibernate.org/orm/documentation/)
-- [Spring Data JPA Reference](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/)
-
-### Best Practices
-- [Baeldung - JPA Entity Inheritance](https://www.baeldung.com/hibernate-inheritance)
-- [Vlad Mihalcea - Hibernate Best Practices](https://vladmihalcea.com/tutorials/hibernate/)
-- [Thorben Janssen - JPA Tips](https://thorben-janssen.com/tips/)
-
-### Books
-- *Java Persistence with Hibernate* (2nd Edition) - Bauer, King, Gregory
-- *Pro JPA 2* - Keith, Schincariol
-
 ---
 
 **Last Updated:** 2025-12-26  
-**Version:** 2.1 (Added Tariff Flags - Bandeiras Tarifárias)  
+**Version:** 2.2 (Added BillItem and Analysis entities)  
 **Status:** Implementation Ready ✅
-

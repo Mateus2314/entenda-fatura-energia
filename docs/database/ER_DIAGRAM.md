@@ -1,6 +1,6 @@
-# Modelo Entidade-Relacionamento (ER) - Visual
+# Entity-Relationship (ER) Model - Visual
 
-## 📊 Diagrama ER Completo
+## 📊 Complete ER Diagram
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
@@ -128,49 +128,49 @@
 
 ---
 
-## 📊 Detalhamento: TARIFFS (Integração API ANEEL)
+## 📊 Details: TARIFFS (ANEEL API Integration)
 
-### Descrição
-Armazena informações de tarifas de energia sincronizadas de duas APIs de Dados Abertos da ANEEL:
-1. **Tarifas de Energia** (valores base)
-2. **Bandeiras Tarifárias** (adicionais por consumo)
+### Description
+Stores electricity tariff information synchronized from two ANEEL Open Data APIs:
+1. **Energy Tariffs** (base values)
+2. **Tariff Flags** (consumption surcharges)
 
 **API Sources:**
-- Tarifas: `https://dadosabertos.aneel.gov.br/api/3/action/datastore_search?resource_id=fcf2906c-7c32-4b9b-a637-054e7a5234f4`
-- Bandeiras: `https://dadosabertos.aneel.gov.br/api/3/action/datastore_search?resource_id=0591b8f6-fe54-437b-b72b-1aa2efd46e42`
+- Tariffs: `https://dadosabertos.aneel.gov.br/api/3/action/datastore_search?resource_id=fcf2906c-7c32-4b9b-a637-054e7a5234f4`
+- Flags: `https://dadosabertos.aneel.gov.br/api/3/action/datastore_search?resource_id=0591b8f6-fe54-437b-b72b-1aa2efd46e42`
 
-### Mapeamento de Campos (API → Database)
+### Field Mapping (API → Database)
 
-#### Tarifas de Energia (Resource ID: fcf2906c-7c32-4b9b-a637-054e7a5234f4)
+#### Energy Tariffs (Resource ID: fcf2906c-7c32-4b9b-a637-054e7a5234f4)
 
-| Campo API (ANEEL) | Campo Database | Tipo | Descrição |
+| API Field (ANEEL) | Database Field | Type | Description |
 |-------------------|----------------|------|-----------|
-| `DatGeracaoConjuntoDados` | `generation_date` | `DATE` | Data de geração do dataset |
-| `DscREH` | `description_reh` | `VARCHAR(500)` | Resolução Homologatória |
-| `SigAgente` | `distributor` | `VARCHAR(100)` | Nome da distribuidora (ex: CPFL JAGUARI) |
-| `NumCNPJDistribuidora` | `cnpj_distributor` | `VARCHAR(14)` | CNPJ da distribuidora |
-| `DatInicioVigencia` | `valid_from` | `DATE` | Data de início de vigência |
-| `DatFimVigencia` | `valid_until` | `DATE` | Data de fim de vigência (nullable) |
-| `DscBaseTarifaria` | `tariff_base_desc` | `VARCHAR(100)` | Descrição da base tarifária |
-| `DscSubGrupo` | `subgroup` | `VARCHAR(10)` | Subgrupo tarifário (A2, B1, etc.) |
-| `DscModalidadeTarifaria` | `tariff_modality` | `VARCHAR(50)` | Modalidade (Azul, Verde, Convencional) |
-| `DscClasse` | `consumer_class` | `VARCHAR(100)` | Classe do consumidor (Residencial, Industrial) |
-| `DscSubClasse` | `consumer_subclass` | `VARCHAR(100)` | Subclasse do consumidor |
-| `DscDetalhe` | `detail` | `VARCHAR(100)` | Detalhes adicionais (APE, etc.) |
-| `NomPostoTarifario` | `tariff_post_name` | `VARCHAR(50)` | Posto tarifário (Ponta, Fora ponta) |
-| `DscUnidadeTerciaria` | `tertiary_unit` | `VARCHAR(10)` | Unidade (kW, kWh) |
-| `SigAgenteAcessante` | `accessing_agent` | `VARCHAR(100)` | Agente acessante |
-| `VlrTUSD` | `tusd_value` | `DECIMAL(10,4)` | Valor TUSD (Tarifa de Uso do Sistema de Distribuição) |
-| `VlrTE` | `te_value` | `DECIMAL(10,4)` | Valor TE (Tarifa de Energia) |
+| `DatGeracaoConjuntoDados` | `generation_date` | `DATE` | Dataset generation date |
+| `DscREH` | `description_reh` | `VARCHAR(500)` | Homologatory Resolution |
+| `SigAgente` | `distributor` | `VARCHAR(100)` | Distributor name (e.g., CPFL JAGUARI) |
+| `NumCNPJDistribuidora` | `cnpj_distributor` | `VARCHAR(14)` | Distributor CNPJ |
+| `DatInicioVigencia` | `valid_from` | `DATE` | Validity start date |
+| `DatFimVigencia` | `valid_until` | `DATE` | Validity end date (nullable) |
+| `DscBaseTarifaria` | `tariff_base_desc` | `VARCHAR(100)` | Tariff base description |
+| `DscSubGrupo` | `subgroup` | `VARCHAR(10)` | Tariff subgroup (A2, B1, etc.) |
+| `DscModalidadeTarifaria` | `tariff_modality` | `VARCHAR(50)` | Modality (Blue, Green, Conventional) |
+| `DscClasse` | `consumer_class` | `VARCHAR(100)` | Consumer class (Residential, Industrial) |
+| `DscSubClasse` | `consumer_subclass` | `VARCHAR(100)` | Consumer subclass |
+| `DscDetalhe` | `detail` | `VARCHAR(100)` | Additional details (APE, etc.) |
+| `NomPostoTarifario` | `tariff_post_name` | `VARCHAR(50)` | Tariff post (Peak, Off-peak) |
+| `DscUnidadeTerciaria` | `tertiary_unit` | `VARCHAR(10)` | Unit (kW, kWh) |
+| `SigAgenteAcessante` | `accessing_agent` | `VARCHAR(100)` | Accessing agent |
+| `VlrTUSD` | `tusd_value` | `DECIMAL(10,4)` | TUSD Value (Distribution System Usage Tariff) |
+| `VlrTE` | `te_value` | `DECIMAL(10,4)` | TE Value (Energy Tariff) |
 
-#### Bandeiras Tarifárias (Resource ID: 0591b8f6-fe54-437b-b72b-1aa2efd46e42) ⭐ NEW
+#### Tariff Flags (Resource ID: 0591b8f6-fe54-437b-b72b-1aa2efd46e42) ⭐ NEW
 
-| Campo API (ANEEL) | Campo Database | Tipo | Descrição |
+| API Field (ANEEL) | Database Field | Type | Description |
 |-------------------|----------------|------|-----------|
-| `DatGeracaoConjuntoDados` | `flag_generation_date` | `DATE` | Data de geração do dataset de bandeiras |
-| `DatCompetencia` | `competence_date` | `DATE` | Mês de competência/vigência da bandeira |
-| `NomBandeiraAcionada` | `activated_flag_name` | `VARCHAR(50)` | Nome da bandeira (Verde, Amarela, Vermelha P1, Vermelha P2) |
-| `VlrAdicionalBandeira` | `flag_additional_value` | `DECIMAL(10,4)` | Valor adicional por 100 kWh |
+| `DatGeracaoConjuntoDados` | `flag_generation_date` | `DATE` | Flag dataset generation date |
+| `DatCompetencia` | `competence_date` | `DATE` | Competence/validity month of flag |
+| `NomBandeiraAcionada` | `activated_flag_name` | `VARCHAR(50)` | Flag name (Green, Yellow, Red P1, Red P2) |
+| `VlrAdicionalBandeira` | `flag_additional_value` | `DECIMAL(10,4)` | Additional value per 100 kWh |
 
 ### Constraints
 
@@ -186,13 +186,13 @@ Armazena informações de tarifas de energia sincronizadas de duas APIs de Dados
 - `te_value`
 
 #### Check Constraints
-- `valid_until >= valid_from` (quando não NULL)
+- `valid_until >= valid_from` (when not NULL)
 - `tusd_value >= 0`
 - `te_value >= 0`
 
 #### Indexes
 ```sql
--- Busca de tarifa vigente por distribuidor e características
+-- Search for active tariff by distributor and characteristics
 CREATE INDEX idx_tariff_search ON tariffs (
     distributor, 
     subgroup, 
@@ -201,52 +201,52 @@ CREATE INDEX idx_tariff_search ON tariffs (
     valid_until
 );
 
--- Busca por CNPJ
+-- Search by CNPJ
 CREATE INDEX idx_tariff_cnpj ON tariffs (cnpj_distributor);
 
--- Busca por vigência
+-- Search by validity period
 CREATE INDEX idx_tariff_validity ON tariffs (valid_from, valid_until);
 ```
 
-### Regras de Negócio
+### Business Rules
 
-1. **Sincronização Automática - Duas APIs**
-   - **Tarifas de energia** sincronizadas via job agendado (API 1)
-   - **Bandeiras tarifárias** sincronizadas via job agendado (API 2)
-   - Não há criação/edição manual de tarifas
-   - Sistema mantém histórico completo de todas as tarifas
+1. **Automatic Synchronization - Two APIs**
+   - **Energy tariffs** synchronized via scheduled job (API 1)
+   - **Tariff flags** synchronized via scheduled job (API 2)
+   - No manual tariff creation/editing
+   - System maintains complete tariff history
 
-2. **Imutabilidade**
-   - Tarifas são imutáveis após associação com faturas
-   - Novas versões são criadas como novos registros
-   - `ON DELETE RESTRICT` impede deleção de tarifas em uso
+2. **Immutability**
+   - Tariffs are immutable after being associated with bills
+   - New versions are created as new records
+   - `ON DELETE RESTRICT` prevents deletion of tariffs in use
 
-3. **Conversão de Valores**
-   - API retorna valores com vírgula: `"1,85"` ou `"30,00"`
-   - Sistema converte para `BigDecimal`: `1.85` ou `30.00`
-   - Necessário parsing customizado
+3. **Value Conversion**
+   - API returns values with comma: `"1,85"` or `"30,00"`
+   - System converts to `BigDecimal`: `1.85` or `30.00`
+   - Custom parsing required
 
-4. **Períodos de Vigência**
-   - `valid_from`: Data de início de vigência da tarifa (obrigatório)
-   - `valid_until`: Data de fim (opcional - tarifa atual se NULL)
-   - `competence_date`: Mês de competência da bandeira tarifária
-   - Podem existir múltiplas tarifas para mesmo distribuidor em períodos diferentes
-   - Não há validação de overlap (ANEEL controla isso)
+4. **Validity Periods**
+   - `valid_from`: Tariff validity start date (required)
+   - `valid_until`: End date (optional - NULL for current tariffs)
+   - `competence_date`: Tariff flag competence month
+   - Multiple tariffs can exist for same distributor in different periods
+   - No overlap validation (ANEEL controls this)
 
-5. **Snapshot de Dados**
-   - Cada fatura mantém referência à tarifa aplicada
-   - Se tarifa mudar, faturas antigas preservam valores originais
-   - Sistema trabalha com snapshot, não com valores dinâmicos
+5. **Data Snapshot**
+   - Each bill maintains reference to applied tariff
+   - If tariff changes, old bills preserve original values
+   - System works with snapshots, not dynamic values
 
-6. **Bandeiras Tarifárias** ⭐ NEW
-   - Bandeira indica custo adicional por escassez hídrica
-   - Tipos: Verde (R$ 0), Amarela (~R$ 18,00), Vermelha P1 (~R$ 30,00), Vermelha P2 (~R$ 40,00)
-   - Valor adicional cobrado por cada 100 kWh consumidos
-   - Muda mensalmente conforme condições de geração
-   - `activated_flag_name`: Nome da bandeira vigente no mês
-   - `flag_additional_value`: Valor adicional por 100 kWh
+6. **Tariff Flags** ⭐ NEW
+   - Flag indicates additional cost due to water scarcity
+   - Types: Green (R$ 0), Yellow (~R$ 18.00), Red P1 (~R$ 30.00), Red P2 (~R$ 40.00)
+   - Additional value charged per 100 kWh consumed
+   - Changes monthly according to generation conditions
+   - `activated_flag_name`: Active flag name for the month
+   - `flag_additional_value`: Additional value per 100 kWh
 
-### Exemplo de Consulta de Tarifa Vigente
+### Active Tariff Query Example
 ```java
 // Buscar tarifa aplicável para uma fatura
 Tariff findActiveTariff(
@@ -264,95 +264,95 @@ Tariff findActiveTariff(
 }
 ```
 
-### Observações Importantes
+### Important Notes
 
-⚠️ **Campos "Não se aplica"**
-- API pode retornar "Não se aplica" em campos como `consumer_class`
-- Decisão: Armazenar como está ou converter para NULL (definir no mapper)
+⚠️ **"Not applicable" Fields**
+- API may return "Não se aplica" (Not applicable) in fields like `consumer_class`
+- Decision: Store as is or convert to NULL (define in mapper)
 
-⚠️ **Valores Zerados**
-- `VlrTE` pode ser `",00"` (zero com vírgula)
-- `VlrAdicionalBandeira` pode ser `"0,00"` para bandeira Verde
-- Tratar parsing de edge cases
+⚠️ **Zero Values**
+- `VlrTE` can be `",00"` (zero with comma)
+- `VlrAdicionalBandeira` can be `"0,00"` for Green flag
+- Handle edge cases in parsing
 
-⚠️ **Volume de Dados**
-- API ANEEL tem milhares de tarifas históricas
-- Considerar filtros na sincronização (apenas tarifas recentes?)
-- Implementar paginação na consulta da API
+⚠️ **Data Volume**
+- ANEEL API has thousands of historical tariffs
+- Consider filters in synchronization (recent tariffs only?)
+- Implement pagination in API queries
 
-⚠️ **Integração de Duas APIs** ⭐ NEW
-- **Tarifas** e **Bandeiras** vêm de endpoints diferentes
-- Ambas devem ser sincronizadas para cálculo completo
-- `competence_date` da bandeira deve corresponder ao `reference_month` da fatura
-- Cálculo final: `(TUSD + TE) * consumo_kwh + (flag_additional_value * consumo_kwh / 100)`
+⚠️ **Two APIs Integration** ⭐ NEW
+- **Tariffs** and **Flags** come from different endpoints
+- Both must be synchronized for complete calculation
+- `competence_date` of flag must match `reference_month` of bill
+- Final calculation: `(TUSD + TE) * consumption_kwh + (flag_additional_value * consumption_kwh / 100)`
 
-⚠️ **Bandeiras Tarifárias - Atualização Mensal**
-- Bandeira muda mensalmente (DatCompetencia)
-- Sincronizar mensalmente ou antes de processar faturas
-- Bandeira Verde pode ter valor R$ 0,00 (sem adicional)
+⚠️ **Tariff Flags - Monthly Update**
+- Flag changes monthly (DatCompetencia)
+- Synchronize monthly or before processing bills
+- Green flag can have R$ 0.00 value (no additional cost)
 
 ---
 
-## 🔗 Relacionamentos Detalhados
+## 🔗 Detailed Relationships
 
 ### 1. **USERS → CLIENTS/CONSULTANTS/ADMINS** (1:1 - JOINED Inheritance)
-- **Tipo:** Herança JOINED
-- **Descrição:** Cada tipo de usuário herda de `users` e tem sua própria tabela
-- **Chave Primária:** `user_id` nas tabelas filhas é FK para `users.id`
-- **Cascata:** ON DELETE CASCADE (deleta usuário → deleta subentidade)
+- **Type:** JOINED Inheritance
+- **Description:** Each user type inherits from `users` and has its own table
+- **Primary Key:** `user_id` in child tables is FK to `users.id`
+- **Cascade:** ON DELETE CASCADE (deletes user → deletes subentity)
 
 ### 2. **CLIENTS → ELECTRICITY_BILLS** (1:N)
-- **Tipo:** One-to-Many
-- **Descrição:** Um cliente pode ter várias faturas de energia
-- **Chave Estrangeira:** `electricity_bills.client_id → clients.user_id`
-- **Restrição:** NOT NULL (toda fatura DEVE ter um cliente)
-- **Cascata:** ON DELETE RESTRICT (não pode deletar cliente com faturas)
+- **Type:** One-to-Many
+- **Description:** A client can have multiple electricity bills
+- **Foreign Key:** `electricity_bills.client_id → clients.user_id`
+- **Constraint:** NOT NULL (every bill MUST have a client)
+- **Cascade:** ON DELETE RESTRICT (cannot delete client with bills)
 
 ### 3. **CONSULTANTS → ELECTRICITY_BILLS** (1:N)
-- **Tipo:** One-to-Many (Opcional)
-- **Descrição:** Um consultor pode gerenciar várias faturas de clientes
-- **Chave Estrangeira:** `electricity_bills.consultant_id → consultants.user_id`
-- **Restrição:** NULL (fatura pode não ter consultor associado)
-- **Cascata:** ON DELETE SET NULL (deleta consultor → mantém fatura)
-- **Observação:** Consultante é como um "upgrade" do cliente com campos adicionais
+- **Type:** One-to-Many (Optional)
+- **Description:** A consultant can manage multiple client bills
+- **Foreign Key:** `electricity_bills.consultant_id → consultants.user_id`
+- **Constraint:** NULL (bill may not have an associated consultant)
+- **Cascade:** ON DELETE SET NULL (deletes consultant → keeps bill)
+- **Note:** Consultant is like an "upgraded" client with additional fields
 
-### 4. **TARIFFS → ELECTRICITY_BILLS** (1:N) ⭐ NOVO
-- **Tipo:** One-to-Many
-- **Descrição:** Uma tarifa pode estar em várias faturas, mas cada fatura tem apenas UMA tarifa
-- **Chave Estrangeira:** `electricity_bills.tariff_id → tariffs.id`
-- **Restrição:** NOT NULL (toda fatura DEVE ter uma tarifa)
-- **Cascata:** ON DELETE RESTRICT (não pode deletar tarifa em uso)
+### 4. **TARIFFS → ELECTRICITY_BILLS** (1:N) ⭐ NEW
+- **Type:** One-to-Many
+- **Description:** A tariff can be in multiple bills, but each bill has only ONE tariff
+- **Foreign Key:** `electricity_bills.tariff_id → tariffs.id`
+- **Constraint:** NOT NULL (every bill MUST have a tariff)
+- **Cascade:** ON DELETE RESTRICT (cannot delete tariff in use)
 
 ### 5. **ELECTRICITY_BILLS → BILL_ITEMS** (1:N)
-- **Tipo:** One-to-Many
-- **Descrição:** Uma fatura tem vários itens de cobrança detalhados
-- **Chave Estrangeira:** `bill_items.bill_id → electricity_bills.id`
-- **Restrição:** NOT NULL
-- **Cascata:** ON DELETE CASCADE (deleta fatura → deleta itens)
+- **Type:** One-to-Many
+- **Description:** A bill has multiple detailed charge items
+- **Foreign Key:** `bill_items.bill_id → electricity_bills.id`
+- **Constraint:** NOT NULL
+- **Cascade:** ON DELETE CASCADE (deletes bill → deletes items)
 
 ### 6. **ELECTRICITY_BILLS → ANALYSES** (1:1)
-- **Tipo:** One-to-One
-- **Descrição:** Cada fatura pode ter UMA análise gerada
-- **Chave Estrangeira:** `analyses.bill_id → electricity_bills.id`
-- **Restrição:** NOT NULL, UNIQUE
-- **Cascata:** ON DELETE CASCADE (deleta fatura → deleta análise)
+- **Type:** One-to-One
+- **Description:** Each bill can have ONE generated analysis
+- **Foreign Key:** `analyses.bill_id → electricity_bills.id`
+- **Constraint:** NOT NULL, UNIQUE
+- **Cascade:** ON DELETE CASCADE (deletes bill → deletes analysis)
 
 ---
 
-## 📋 Cardinalidades
+## 📋 Cardinalities
 
-| Relação | Cardinalidade | Obrigatório? |
+| Relationship | Cardinality | Required? |
 |---------|---------------|--------------|
-| User → Client/Consultant/Admin | 1:1 | Sim (herança) |
-| Client → Electricity_Bills | 1:N | Não (cliente pode não ter faturas) |
-| Consultant → Electricity_Bills | 1:N | Não (consultor pode não gerenciar faturas) |
-| **Tariff → Electricity_Bills** | **1:N** | **Sim (fatura precisa de tarifa)** |
-| Electricity_Bills → Bill_Items | 1:N | Não (fatura pode não ter detalhamento) |
-| Electricity_Bills → Analyses | 1:1 | Não (fatura pode não ter análise) |
+| User → Client/Consultant/Admin | 1:1 | Yes (inheritance) |
+| Client → Electricity_Bills | 1:N | No (client may have no bills) |
+| Consultant → Electricity_Bills | 1:N | No (consultant may not manage bills) |
+| **Tariff → Electricity_Bills** | **1:N** | **Yes (bill needs tariff)** |
+| Electricity_Bills → Bill_Items | 1:N | No (bill may not have itemization) |
+| Electricity_Bills → Analyses | 1:1 | No (bill may not have analysis) |
 
 ---
 
-## 🔑 Chaves e Índices
+## 🔑 Keys and Indexes
 
 ### Primary Keys (PK)
 - `users.id` - UUID
@@ -370,11 +370,11 @@ Tariff findActiveTariff(
 - `admins.user_id → users.id`
 - `electricity_bills.client_id → clients.user_id`
 - `electricity_bills.consultant_id → consultants.user_id`
-- **`electricity_bills.tariff_id → tariffs.id`** ⭐ NOVO
+- **`electricity_bills.tariff_id → tariffs.id`** ⭐ NEW
 - `bill_items.bill_id → electricity_bills.id`
 - `analyses.bill_id → electricity_bills.id`
 
-### Índices Recomendados
+### Recommended Indexes
 ```sql
 -- Users
 CREATE INDEX idx_users_email ON users(email);
@@ -409,31 +409,31 @@ CREATE UNIQUE INDEX idx_analyses_bill_unique ON analyses(bill_id);
 
 ---
 
-## 📐 Regras de Negócio no Modelo
+## 📐 Business Rules in Model
 
-### 1. Herança de Usuários (JOINED)
-- ✅ Todo `Client`, `Consultant` ou `Admin` É UM `User`
-- ✅ Não existe `User` sem ser um dos tipos específicos (classe abstrata)
-- ✅ `user_id` nas tabelas filhas é PK e FK simultaneamente
-- ✅ Consultant herda TODOS os campos de Client + campos específicos
+### 1. User Inheritance (JOINED)
+- ✅ Every `Client`, `Consultant` or `Admin` IS A `User`
+- ✅ `User` cannot exist without being one of the specific types (abstract class)
+- ✅ `user_id` in child tables is both PK and FK simultaneously
+- ✅ Consultant inherits ALL fields from Client + specific fields
 
-### 2. Propriedade de Faturas
-- ✅ Toda fatura DEVE pertencer a um cliente (`client_id NOT NULL`)
-- ✅ Fatura PODE ter um consultor associado (`consultant_id NULL`)
-- ✅ **Toda fatura DEVE ter uma tarifa aplicada (`tariff_id NOT NULL`)** ⭐ NOVO
-- ✅ Cliente não pode ser deletado se tiver faturas
+### 2. Bill Ownership
+- ✅ Every bill MUST belong to a client (`client_id NOT NULL`)
+- ✅ Bill MAY have an associated consultant (`consultant_id NULL`)
+- ✅ **Every bill MUST have an applied tariff (`tariff_id NOT NULL`)** ⭐ NEW
+- ✅ Client cannot be deleted if it has bills
 
-### 3. Unicidade
-- ✅ Email de usuário é único no sistema
-- ✅ CPF de cliente é único
-- ✅ CNPJ de consultor é único
-- ✅ Cada fatura tem apenas UMA análise (relação 1:1)
-- ✅ **Cada fatura tem apenas UMA tarifa aplicada** ⭐ NOVO
+### 3. Uniqueness
+- ✅ User email is unique in the system
+- ✅ Client CPF is unique
+- ✅ Consultant CNPJ is unique
+- ✅ Each bill has only ONE analysis (1:1 relationship)
+- ✅ **Each bill has only ONE applied tariff** ⭐ NEW
 
-### 4. Integridade Temporal
-- ✅ Tarifas têm período de validade (`valid_from`, `valid_until`)
-- ✅ Faturas têm mês de referência e data de vencimento
-- ✅ Análises são criadas após a fatura
+### 4. Temporal Integrity
+- ✅ Tariffs have validity period (`valid_from`, `valid_until`)
+- ✅ Bills have reference month and due date
+- ✅ Analyses are created after the bill
 
 ### 5. Required Fields
 **Users:**
@@ -454,6 +454,14 @@ CREATE UNIQUE INDEX idx_analyses_bill_unique ON analyses(bill_id);
 - id, generation_date, distributor, cnpj_distributor, valid_from, tusd_value, te_value
 - Optional: valid_until, description_reh, tariff_base_desc, subgroup, tariff_modality, consumer_class, consumer_subclass, detail, tariff_post_name, tertiary_unit, accessing_agent
 
+**BillItems:**
+- id, bill_id, item_type, amount, created_at
+- Optional: description, quantity, unit_price
+
+**Analyses:**
+- id, bill_id, created_at
+- Optional: average_consumption, cost_per_kwh, comparison_prev_month, savings_tips, report_pdf_url
+
 **Key Differences:**
 - ✅ **Client** uses **CPF** (individual tax ID - pessoa física)
 - ✅ **Consultant** uses **CNPJ** (company tax ID - pessoa jurídica)
@@ -462,7 +470,7 @@ CREATE UNIQUE INDEX idx_analyses_bill_unique ON analyses(bill_id);
 
 ---
 
-## 🎨 Visualização Simplificada
+## 🎨 Simplified Visualization
 
 ```
            ┌─────────┐
@@ -481,7 +489,7 @@ CREATE UNIQUE INDEX idx_analyses_bill_unique ON analyses(bill_id);
      │ ELEC_BILLS │◄────┐
      └─┬────┬─────┘     │
        │    │         ┌─┴────┐
-       │    │         │TARIFF│ ⭐ NOVO
+       │    │         │TARIFF│ ⭐ NEW
        │    │         └──────┘
        │    │
    ┌───▼──┐ └──────┐
@@ -491,30 +499,30 @@ CREATE UNIQUE INDEX idx_analyses_bill_unique ON analyses(bill_id);
                └────────┘
 ```
 
-**Legenda:**
-- `─` : Relacionamento
-- `▼` : Herança (is-a)
+**Legend:**
+- `─` : Relationship
+- `▼` : Inheritance (is-a)
 - `◄` : Foreign Key (belongs-to)
-- ⭐ : Novo relacionamento adicionado
+- ⭐ : New relationship added
 
 ---
 
-## 📊 Estatísticas do Modelo
+## 📊 Model Statistics
 
-| Métrica | Valor |
+| Metric | Value |
 |---------|-------|
-| **Total de Tabelas** | 8 |
-| **Tabelas Base** | 1 (users) |
-| **Tabelas de Herança** | 3 (clients, consultants, admins) |
-| **Tabelas de Domínio** | 4 (electricity_bills, bill_items, tariffs, analyses) |
-| **Total de FKs** | 9 |
-| **Relacionamentos 1:1** | 4 (herança + analyses) |
-| **Relacionamentos 1:N** | 5 (bills, items, tariffs) |
-| **Índices Recomendados** | 16 |
+| **Total Tables** | 8 |
+| **Base Tables** | 1 (users) |
+| **Inheritance Tables** | 3 (clients, consultants, admins) |
+| **Domain Tables** | 4 (electricity_bills, bill_items, tariffs, analyses) |
+| **Total FKs** | 9 |
+| **1:1 Relationships** | 4 (inheritance + analyses) |
+| **1:N Relationships** | 5 (bills, items, tariffs) |
+| **Recommended Indexes** | 16 |
 
 ---
 
-## 🔄 Alterações Principais
+## 🔄 Main Changes
 
 ### ✅ Implemented Changes
 
@@ -554,45 +562,45 @@ CREATE UNIQUE INDEX idx_analyses_bill_unique ON analyses(bill_id);
 
 ---
 
-## 📝 Notas de Implementação
+## 📝 Implementation Notes
 
-### Ordem de Criação de Tabelas (Flyway Migrations)
+### Table Creation Order (Flyway Migrations)
 ```
 V001 - users (base)
-V002 - clients (herança)
-V003 - consultants (herança)
-V004 - admins (herança)
-V005 - tariffs (independente, com 17 campos ANEEL)
-V006 - electricity_bills (depende: clients, consultants, tariffs)
-V007 - bill_items (depende: electricity_bills)
-V008 - analyses (depende: electricity_bills)
+V002 - clients (inheritance)
+V003 - consultants (inheritance)
+V004 - admins (inheritance)
+V005 - tariffs (independent, with 17 ANEEL fields)
+V006 - electricity_bills (depends: clients, consultants, tariffs)
+V007 - bill_items (depends: electricity_bills)
+V008 - analyses (depends: electricity_bills)
 ```
 
-### Ordem de Deleção (Cascade)
+### Deletion Order (Cascade)
 ```
 analyses → bill_items → electricity_bills → consultants/clients → users
-                                          ↘ tariffs (independente, RESTRICT)
+                                          ↘ tariffs (independent, RESTRICT)
 ```
 
-### Integração com API ANEEL
+### ANEEL API Integration
 **Base URL:** `https://dadosabertos.aneel.gov.br/api/3/action/datastore_search`
 
-**APIs Integradas:**
-1. **Tarifas de Energia**
+**Integrated APIs:**
+1. **Energy Tariffs**
    - Resource ID: `fcf2906c-7c32-4b9b-a637-054e7a5234f4`
-   - Sincronização: Job agendado (diariamente às 2h)
-   - Campos: 17 campos (distributor, TUSD, TE, etc.)
+   - Synchronization: Scheduled job (daily at 2 AM)
+   - Fields: 17 fields (distributor, TUSD, TE, etc.)
 
-2. **Bandeiras Tarifárias** ⭐ NEW
+2. **Tariff Flags** ⭐ NEW
    - Resource ID: `0591b8f6-fe54-437b-b72b-1aa2efd46e42`
-   - Sincronização: Job agendado (mensalmente ou diariamente)
-   - Campos: 4 campos (flag_generation_date, competence_date, activated_flag_name, flag_additional_value)
+   - Synchronization: Scheduled job (monthly or daily)
+   - Fields: 4 fields (flag_generation_date, competence_date, activated_flag_name, flag_additional_value)
 
-**Estratégia:** Snapshot completo (não atualização em tempo real)
+**Strategy:** Complete snapshot (not real-time updates)
 
 ---
 
-**Última Atualização:** 26/12/2025  
-**Versão do Modelo:** 3.1 (ANEEL Integration + Tariff Flags)  
-**Status:** ✅ Atualizado com Bandeiras Tarifárias
+**Last Updated:** 12/26/2025  
+**Model Version:** 3.2 (BillItem and Analysis entities implemented)  
+**Status:** ✅ All model entities implemented
 

@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ElectricityBillTest {
+class ElectricityBillTest {
 
     private ValidatorFactory factory;
     private Validator validator;
