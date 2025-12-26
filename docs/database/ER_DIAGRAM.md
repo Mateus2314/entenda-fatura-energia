@@ -63,9 +63,7 @@
 │     │ due_date              DATE            NOT NULL                      │
 │     │ total_amount          DECIMAL(10,2)   NOT NULL                      │
 │     │ consumption_kwh       DECIMAL(10,2)   NOT NULL                      │
-│     │ tariff_modality       VARCHAR(50)                                   │
 │     │ pdf_url               TEXT                                          │
-│     │ status                VARCHAR(20)                                   │
 │     │ created_at            TIMESTAMP       NOT NULL, DEFAULT NOW()       │
 │     │ updated_at            TIMESTAMP       DEFAULT NOW()                 │
 └───────────────────────────────────────────────────────────────────────────┘
@@ -74,25 +72,40 @@
                 │                                    │
                 │ N                                  │ 1
                 ▼                                    ▼
-┌────────────────────────────────────┐    ┌────────────────────────────────────┐
-│          BILL_ITEMS                │    │           TARIFFS                  │
-├────────────────────────────────────┤    ├────────────────────────────────────┤
-│ PK │ id           UUID             │    │ PK │ id              UUID          │
-│ FK │ bill_id      UUID             │    │    │ distributor     VARCHAR(100)  │
-│    │              NOT NULL         │    │    │                 NOT NULL      │
-│    │              → elec_bills.id  │    │    │ tariff_type     VARCHAR(50)   │
-│    │ item_type    VARCHAR(50)      │    │    │                 NOT NULL      │
-│    │              NOT NULL         │    │    │ value           DECIMAL(10,4) │
-│    │ description  VARCHAR(255)     │    │    │                 NOT NULL      │
-│    │ quantity     DECIMAL(10,2)    │    │    │ valid_from      DATE          │
-│    │ unit_price   DECIMAL(10,4)    │    │    │                 NOT NULL      │
-│    │ amount       DECIMAL(10,2)    │    │    │ valid_until     DATE          │
-│    │              NOT NULL         │    │    │ created_at      TIMESTAMP     │
-│    │ created_at   TIMESTAMP        │    │    │                 NOT NULL,     │
-│    │              NOT NULL,        │    │    │                 DEFAULT NOW() │
-│    │              DEFAULT NOW()    │    │    │ updated_at      TIMESTAMP     │
-└────────────────────────────────────┘    │    │                 DEFAULT NOW() │
-                │                          └────────────────────────────────────┘
+┌────────────────────────────────────┐    ┌────────────────────────────────────────────────┐
+│          BILL_ITEMS                │    │           TARIFFS (ANEEL API)              │
+├────────────────────────────────────┤    ├────────────────────────────────────────────────┤
+│ PK │ id           UUID             │    │ PK │ id                   UUID                │
+│ FK │ bill_id      UUID             │    │    │ generation_date      DATE       NOT NULL │
+│    │              NOT NULL         │    │    │ description_reh      VARCHAR(500)        │
+│    │              → elec_bills.id  │    │    │ distributor          VARCHAR(100)        │
+│    │ item_type    VARCHAR(50)      │    │    │                      NOT NULL            │
+│    │              NOT NULL         │    │    │ cnpj_distributor     VARCHAR(14)         │
+│    │ description  VARCHAR(255)     │    │    │                      NOT NULL            │
+│    │ quantity     DECIMAL(10,2)    │    │    │ valid_from           DATE       NOT NULL │
+│    │ unit_price   DECIMAL(10,4)    │    │    │ valid_until          DATE                │
+│    │ amount       DECIMAL(10,2)    │    │    │ tariff_base_desc     VARCHAR(100)        │
+│    │              NOT NULL         │    │    │ subgroup             VARCHAR(10)         │
+│    │ created_at   TIMESTAMP        │    │    │ tariff_modality      VARCHAR(50)         │
+│    │              NOT NULL,        │    │    │ consumer_class       VARCHAR(100)        │
+│    │              DEFAULT NOW()    │    │    │ consumer_subclass    VARCHAR(100)        │
+└────────────────────────────────────┘    │    │ detail               VARCHAR(100)        │
+                │                          │    │ tariff_post_name     VARCHAR(50)         │
+                │                          │    │ tertiary_unit        VARCHAR(10)         │
+                │                          │    │ accessing_agent      VARCHAR(100)        │
+                │                          │    │ tusd_value           DECIMAL(10,4)       │
+                │                          │    │                      NOT NULL            │
+                │                          │    │ te_value             DECIMAL(10,4)       │
+                │                          │    │                      NOT NULL            │
+                │                          │    │ flag_generation_date DATE                │
+                │                          │    │ competence_date      DATE                │
+                │                          │    │ activated_flag_name  VARCHAR(50)         │
+                │                          │    │ flag_additional_value DECIMAL(10,4)      │
+                │                          │    │ created_at           TIMESTAMP           │
+                │                          │    │                      DEFAULT NOW()       │
+                │                          │    │ updated_at           TIMESTAMP           │
+                │                          │    │                      DEFAULT NOW()       │
+                │                          └────────────────────────────────────────────────┘
                 │
                 │ 1
                 │
@@ -110,8 +123,173 @@
 │    │ savings_tips          TEXT                                    │
 │    │ report_pdf_url        TEXT                                    │
 │    │ created_at            TIMESTAMP       NOT NULL, DEFAULT NOW() │
-└─��──────────────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## 📊 Detalhamento: TARIFFS (Integração API ANEEL)
+
+### Descrição
+Armazena informações de tarifas de energia sincronizadas de duas APIs de Dados Abertos da ANEEL:
+1. **Tarifas de Energia** (valores base)
+2. **Bandeiras Tarifárias** (adicionais por consumo)
+
+**API Sources:**
+- Tarifas: `https://dadosabertos.aneel.gov.br/api/3/action/datastore_search?resource_id=fcf2906c-7c32-4b9b-a637-054e7a5234f4`
+- Bandeiras: `https://dadosabertos.aneel.gov.br/api/3/action/datastore_search?resource_id=0591b8f6-fe54-437b-b72b-1aa2efd46e42`
+
+### Mapeamento de Campos (API → Database)
+
+#### Tarifas de Energia (Resource ID: fcf2906c-7c32-4b9b-a637-054e7a5234f4)
+
+| Campo API (ANEEL) | Campo Database | Tipo | Descrição |
+|-------------------|----------------|------|-----------|
+| `DatGeracaoConjuntoDados` | `generation_date` | `DATE` | Data de geração do dataset |
+| `DscREH` | `description_reh` | `VARCHAR(500)` | Resolução Homologatória |
+| `SigAgente` | `distributor` | `VARCHAR(100)` | Nome da distribuidora (ex: CPFL JAGUARI) |
+| `NumCNPJDistribuidora` | `cnpj_distributor` | `VARCHAR(14)` | CNPJ da distribuidora |
+| `DatInicioVigencia` | `valid_from` | `DATE` | Data de início de vigência |
+| `DatFimVigencia` | `valid_until` | `DATE` | Data de fim de vigência (nullable) |
+| `DscBaseTarifaria` | `tariff_base_desc` | `VARCHAR(100)` | Descrição da base tarifária |
+| `DscSubGrupo` | `subgroup` | `VARCHAR(10)` | Subgrupo tarifário (A2, B1, etc.) |
+| `DscModalidadeTarifaria` | `tariff_modality` | `VARCHAR(50)` | Modalidade (Azul, Verde, Convencional) |
+| `DscClasse` | `consumer_class` | `VARCHAR(100)` | Classe do consumidor (Residencial, Industrial) |
+| `DscSubClasse` | `consumer_subclass` | `VARCHAR(100)` | Subclasse do consumidor |
+| `DscDetalhe` | `detail` | `VARCHAR(100)` | Detalhes adicionais (APE, etc.) |
+| `NomPostoTarifario` | `tariff_post_name` | `VARCHAR(50)` | Posto tarifário (Ponta, Fora ponta) |
+| `DscUnidadeTerciaria` | `tertiary_unit` | `VARCHAR(10)` | Unidade (kW, kWh) |
+| `SigAgenteAcessante` | `accessing_agent` | `VARCHAR(100)` | Agente acessante |
+| `VlrTUSD` | `tusd_value` | `DECIMAL(10,4)` | Valor TUSD (Tarifa de Uso do Sistema de Distribuição) |
+| `VlrTE` | `te_value` | `DECIMAL(10,4)` | Valor TE (Tarifa de Energia) |
+
+#### Bandeiras Tarifárias (Resource ID: 0591b8f6-fe54-437b-b72b-1aa2efd46e42) ⭐ NEW
+
+| Campo API (ANEEL) | Campo Database | Tipo | Descrição |
+|-------------------|----------------|------|-----------|
+| `DatGeracaoConjuntoDados` | `flag_generation_date` | `DATE` | Data de geração do dataset de bandeiras |
+| `DatCompetencia` | `competence_date` | `DATE` | Mês de competência/vigência da bandeira |
+| `NomBandeiraAcionada` | `activated_flag_name` | `VARCHAR(50)` | Nome da bandeira (Verde, Amarela, Vermelha P1, Vermelha P2) |
+| `VlrAdicionalBandeira` | `flag_additional_value` | `DECIMAL(10,4)` | Valor adicional por 100 kWh |
+
+### Constraints
+
+#### Primary Key
+- `id` (UUID)
+
+#### Not Null
+- `generation_date`
+- `distributor`
+- `cnpj_distributor`
+- `valid_from`
+- `tusd_value`
+- `te_value`
+
+#### Check Constraints
+- `valid_until >= valid_from` (quando não NULL)
+- `tusd_value >= 0`
+- `te_value >= 0`
+
+#### Indexes
+```sql
+-- Busca de tarifa vigente por distribuidor e características
+CREATE INDEX idx_tariff_search ON tariffs (
+    distributor, 
+    subgroup, 
+    tariff_modality, 
+    valid_from, 
+    valid_until
+);
+
+-- Busca por CNPJ
+CREATE INDEX idx_tariff_cnpj ON tariffs (cnpj_distributor);
+
+-- Busca por vigência
+CREATE INDEX idx_tariff_validity ON tariffs (valid_from, valid_until);
+```
+
+### Regras de Negócio
+
+1. **Sincronização Automática - Duas APIs**
+   - **Tarifas de energia** sincronizadas via job agendado (API 1)
+   - **Bandeiras tarifárias** sincronizadas via job agendado (API 2)
+   - Não há criação/edição manual de tarifas
+   - Sistema mantém histórico completo de todas as tarifas
+
+2. **Imutabilidade**
+   - Tarifas são imutáveis após associação com faturas
+   - Novas versões são criadas como novos registros
+   - `ON DELETE RESTRICT` impede deleção de tarifas em uso
+
+3. **Conversão de Valores**
+   - API retorna valores com vírgula: `"1,85"` ou `"30,00"`
+   - Sistema converte para `BigDecimal`: `1.85` ou `30.00`
+   - Necessário parsing customizado
+
+4. **Períodos de Vigência**
+   - `valid_from`: Data de início de vigência da tarifa (obrigatório)
+   - `valid_until`: Data de fim (opcional - tarifa atual se NULL)
+   - `competence_date`: Mês de competência da bandeira tarifária
+   - Podem existir múltiplas tarifas para mesmo distribuidor em períodos diferentes
+   - Não há validação de overlap (ANEEL controla isso)
+
+5. **Snapshot de Dados**
+   - Cada fatura mantém referência à tarifa aplicada
+   - Se tarifa mudar, faturas antigas preservam valores originais
+   - Sistema trabalha com snapshot, não com valores dinâmicos
+
+6. **Bandeiras Tarifárias** ⭐ NEW
+   - Bandeira indica custo adicional por escassez hídrica
+   - Tipos: Verde (R$ 0), Amarela (~R$ 18,00), Vermelha P1 (~R$ 30,00), Vermelha P2 (~R$ 40,00)
+   - Valor adicional cobrado por cada 100 kWh consumidos
+   - Muda mensalmente conforme condições de geração
+   - `activated_flag_name`: Nome da bandeira vigente no mês
+   - `flag_additional_value`: Valor adicional por 100 kWh
+
+### Exemplo de Consulta de Tarifa Vigente
+```java
+// Buscar tarifa aplicável para uma fatura
+Tariff findActiveTariff(
+    String distributor,      // Ex: "CPFL JAGUARI"
+    String subgroup,         // Ex: "B1"
+    String modality,         // Ex: "Convencional"
+    LocalDate referenceDate  // Data de referência da fatura
+) {
+    return tariffRepository.findByDistributorAndSubgroupAndModalityAndDate(
+        distributor, 
+        subgroup, 
+        modality, 
+        referenceDate // WHERE referenceDate BETWEEN valid_from AND valid_until
+    );
+}
+```
+
+### Observações Importantes
+
+⚠️ **Campos "Não se aplica"**
+- API pode retornar "Não se aplica" em campos como `consumer_class`
+- Decisão: Armazenar como está ou converter para NULL (definir no mapper)
+
+⚠️ **Valores Zerados**
+- `VlrTE` pode ser `",00"` (zero com vírgula)
+- `VlrAdicionalBandeira` pode ser `"0,00"` para bandeira Verde
+- Tratar parsing de edge cases
+
+⚠️ **Volume de Dados**
+- API ANEEL tem milhares de tarifas históricas
+- Considerar filtros na sincronização (apenas tarifas recentes?)
+- Implementar paginação na consulta da API
+
+⚠️ **Integração de Duas APIs** ⭐ NEW
+- **Tarifas** e **Bandeiras** vêm de endpoints diferentes
+- Ambas devem ser sincronizadas para cálculo completo
+- `competence_date` da bandeira deve corresponder ao `reference_month` da fatura
+- Cálculo final: `(TUSD + TE) * consumo_kwh + (flag_additional_value * consumo_kwh / 100)`
+
+⚠️ **Bandeiras Tarifárias - Atualização Mensal**
+- Bandeira muda mensalmente (DatCompetencia)
+- Sincronizar mensalmente ou antes de processar faturas
+- Bandeira Verde pode ter valor R$ 0,00 (sem adicional)
 
 ---
 
@@ -213,9 +391,8 @@ CREATE INDEX idx_consultants_user_id ON consultants(user_id);
 -- Electricity Bills
 CREATE INDEX idx_bills_client_id ON electricity_bills(client_id);
 CREATE INDEX idx_bills_consultant_id ON electricity_bills(consultant_id);
-CREATE INDEX idx_bills_tariff_id ON electricity_bills(tariff_id); -- NOVO
+CREATE INDEX idx_bills_tariff_id ON electricity_bills(tariff_id);
 CREATE INDEX idx_bills_reference_month ON electricity_bills(reference_month);
-CREATE INDEX idx_bills_status ON electricity_bills(status);
 
 -- Bill Items
 CREATE INDEX idx_bill_items_bill_id ON bill_items(bill_id);
@@ -271,10 +448,11 @@ CREATE UNIQUE INDEX idx_analyses_bill_unique ON analyses(bill_id);
 - company_logo (optional) ⭐ NEW
 
 **Electricity_Bills:**
-- id, client_id, **tariff_id** ⭐, reference_month, due_date, total_amount, consumption_kwh
+- id, client_id, tariff_id, reference_month, due_date, total_amount, consumption_kwh
 
-**Tariffs:**
-- id, distributor, tariff_type, value, valid_from
+**Tariffs (ANEEL API Fields):**
+- id, generation_date, distributor, cnpj_distributor, valid_from, tusd_value, te_value
+- Optional: valid_until, description_reh, tariff_base_desc, subgroup, tariff_modality, consumer_class, consumer_subclass, detail, tariff_post_name, tertiary_unit, accessing_agent
 
 **Key Differences:**
 - ✅ **Client** uses **CPF** (individual tax ID - pessoa física)
@@ -358,7 +536,19 @@ CREATE UNIQUE INDEX idx_analyses_bill_unique ON analyses(bill_id);
    - FK: `electricity_bills.tariff_id → tariffs.id`
    - NOT NULL (required)
 
-4. **company_logo field in Consultants** ⭐
+4. **TARIFFS Table - ANEEL API Integration** ⭐⭐ NEW
+   - Expanded from 7 fields to 17 fields
+   - All fields mapped from ANEEL Open Data API
+   - Added detailed field mapping documentation
+   - Changed from simple cost storage to complete tariff snapshot
+   - Fields include: generation_date, description_reh, distributor, cnpj_distributor, valid_from, valid_until, tariff_base_desc, subgroup, tariff_modality, consumer_class, consumer_subclass, detail, tariff_post_name, tertiary_unit, accessing_agent, tusd_value, te_value
+
+5. **Removed Redundant Fields from ELECTRICITY_BILLS** ⭐⭐ NEW
+   - Removed `tariff_modality` (already available in tariffs.tariff_modality via FK)
+   - Removed `status` field (not necessary for current business rules)
+   - Cleaner design with tariff data centralized in TARIFFS table
+
+6. **company_logo field in Consultants** ⭐
    - Type: TEXT (URL or path)
    - Stores consultant's company logo
 
@@ -372,7 +562,7 @@ V001 - users (base)
 V002 - clients (herança)
 V003 - consultants (herança)
 V004 - admins (herança)
-V005 - tariffs (independente)
+V005 - tariffs (independente, com 17 campos ANEEL)
 V006 - electricity_bills (depende: clients, consultants, tariffs)
 V007 - bill_items (depende: electricity_bills)
 V008 - analyses (depende: electricity_bills)
@@ -381,12 +571,28 @@ V008 - analyses (depende: electricity_bills)
 ### Ordem de Deleção (Cascade)
 ```
 analyses → bill_items → electricity_bills → consultants/clients → users
-                                          ↘ tariffs (independente)
+                                          ↘ tariffs (independente, RESTRICT)
 ```
+
+### Integração com API ANEEL
+**Base URL:** `https://dadosabertos.aneel.gov.br/api/3/action/datastore_search`
+
+**APIs Integradas:**
+1. **Tarifas de Energia**
+   - Resource ID: `fcf2906c-7c32-4b9b-a637-054e7a5234f4`
+   - Sincronização: Job agendado (diariamente às 2h)
+   - Campos: 17 campos (distributor, TUSD, TE, etc.)
+
+2. **Bandeiras Tarifárias** ⭐ NEW
+   - Resource ID: `0591b8f6-fe54-437b-b72b-1aa2efd46e42`
+   - Sincronização: Job agendado (mensalmente ou diariamente)
+   - Campos: 4 campos (flag_generation_date, competence_date, activated_flag_name, flag_additional_value)
+
+**Estratégia:** Snapshot completo (não atualização em tempo real)
 
 ---
 
-**Última Atualização:** 15/12/2024  
-**Versão do Modelo:** 2.0  
-**Status:** ✅ Revisado e Atualizado
+**Última Atualização:** 26/12/2025  
+**Versão do Modelo:** 3.1 (ANEEL Integration + Tariff Flags)  
+**Status:** ✅ Atualizado com Bandeiras Tarifárias
 
