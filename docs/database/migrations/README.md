@@ -14,6 +14,8 @@
 | **V004** | Admins table | ✅ | [Summary](V004.md) · [Details](V004/migration.md) · [Queries](V004/queries.sql) · [Validation](V004/validation.md) |
 | **V005** | Tariffs table | ✅ | [Summary](V005.md) · [Details](V005/migration.md) · [Queries](V005/queries.sql) · [Validation](V005/validation.md) |
 | **V006** | Electricity bills table | ✅ | [Summary](V006.md) · [Details](V006/migration.md) · [Queries](V006/queries.sql) · [Validation](V006/validation.md) |
+| **V007** | Bill items table | ✅ | [Summary](V007.md) · [Details](V007/migration.md) · [Queries](V007/queries.sql) · [Validation](V007/validation.md) |
+| **V008** | Analyses table | ✅ | [Summary](V008.md) · [Details](V008/migration.md) · [Queries](V008/queries.sql) · [Validation](V008/validation.md) |
 
 ---
 
@@ -60,13 +62,16 @@ V001 (users)
   ├─► V002 (clients) ───────┐
   ├─► V003 (consultants) ───┤
   └─► V004 (admins)         │
-                            ├─► V006 (electricity_bills)
-V005 (tariffs) ─────────────┘
+                            ├─► V006 (electricity_bills) ──┬─► V007 (bill_items)
+V005 (tariffs) ─────────────┘                              │
+                                                            └─► V008 (analyses)
 ```
 
 - V002-V004 depend on `users` via FK `user_id`
 - V005 is independent (ANEEL API data)
 - V006 depends on `clients`, `consultants`, and `tariffs`
+- V007 depends on `electricity_bills` (Many-to-One)
+- V008 depends on `electricity_bills` (One-to-One)
 
 ---
 
@@ -79,6 +84,8 @@ V005 (tariffs) ─────────────┘
 4. V004 - Creates admins (depends on users)
 5. V005 - Creates tariffs table (independent - ANEEL API integration)
 6. V006 - Creates electricity_bills table (depends on clients, consultants, tariffs)
+7. V007 - Creates bill_items table (depends on electricity_bills)
+8. V008 - Creates analyses table (depends on electricity_bills)
 
 Flyway ensures correct order automatically.
 
