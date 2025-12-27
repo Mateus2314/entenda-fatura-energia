@@ -16,6 +16,7 @@
 | **V006** | Electricity bills table | ✅ | [Summary](V006.md) · [Details](V006/migration.md) · [Queries](V006/queries.sql) · [Validation](V006/validation.md) |
 | **V007** | Bill items table | ✅ | [Summary](V007.md) · [Details](V007/migration.md) · [Queries](V007/queries.sql) · [Validation](V007/validation.md) |
 | **V008** | Analyses table | ✅ | [Summary](V008.md) · [Details](V008/migration.md) · [Queries](V008/queries.sql) · [Validation](V008/validation.md) |
+| **V009** | Consultant-clients join table | ✅ | [Summary](V009.md) · [Details](V009/migration.md) · [Queries](V009/queries.sql) · [Validation](V009/validation.md) |
 
 ---
 
@@ -59,16 +60,19 @@ users (V001)
 ```
 V001 (users)
   │
-  ├─► V002 (clients) ───────┐
-  ├─► V003 (consultants) ───┤
-  └─► V004 (admins)         │
-                            ├─► V006 (electricity_bills) ──┬─► V007 (bill_items)
-V005 (tariffs) ─────────────┘                              │
-                                                            └─► V008 (analyses)
+  ├─► V002 (clients) ─────────┐
+  ├─► V003 (consultants) ─────┤
+  └─► V004 (admins)           │
+                              ├──► V009 (consultant_clients) ⭐ Many-to-Many
+                              │
+                              ├─► V006 (electricity_bills) ──┬─► V007 (bill_items)
+V005 (tariffs) ───────────────┘                              │
+                                                              └─► V008 (analyses)
 ```
 
 - V002-V004 depend on `users` via FK `user_id`
 - V005 is independent (ANEEL API data)
+- **V009 creates Many-to-Many between consultants and clients** ⭐
 - V006 depends on `clients`, `consultants`, and `tariffs`
 - V007 depends on `electricity_bills` (Many-to-One)
 - V008 depends on `electricity_bills` (One-to-One)
@@ -86,6 +90,7 @@ V005 (tariffs) ─────────────┘                       
 6. V006 - Creates electricity_bills table (depends on clients, consultants, tariffs)
 7. V007 - Creates bill_items table (depends on electricity_bills)
 8. V008 - Creates analyses table (depends on electricity_bills)
+9. **V009 - Creates consultant_clients join table (Many-to-Many)** ⭐
 
 Flyway ensures correct order automatically.
 
