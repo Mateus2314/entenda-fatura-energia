@@ -31,25 +31,44 @@
 │     │                 NOT NULL     │ │     │                 NOT NULL    │ │     │             NOT NULL     │
 │     │city             VARCHAR(100) │ │     │company          VARCHAR(255)│ │     │permissions  JSONB        │
 │     │state            VARCHAR(2)   │ │     │                 NOT NULL    │ └────────────────────────────────┘
-│     │zip_code         VARCHAR(10)  │ │     │cnpj             VARCHAR(14) │
-│     │cpf              VARCHAR(11)  │ │     │                 UNIQUE,     │
+│     │zip_code         VARCHAR(10)  │ │     │cnpj             VARCHAR(14) │      ↑ (inherits created_at,
+│     │cpf              VARCHAR(11)  │ │     │                 UNIQUE,     │         updated_at from USERS)
 │     │                 UNIQUE,      │ │     │                 NOT NULL    │
 │     │                 NOT NULL     │ │     │registration_num VARCHAR(50) │
 │     │registration_date DATE         │ │     │address          VARCHAR(500)│
 │     │                 NOT NULL     │ │     │                 NOT NULL    │
-│     │created_at       TIMESTAMP    │ │     │city             VARCHAR(100)│
-│     │                 DEFAULT NOW()│ │     │state            VARCHAR(2)  │
-│     │updated_at       TIMESTAMP    │ │     │zip_code         VARCHAR(10) │
-└────────────────────────────────────┘ │     │company_logo     TEXT        │
-            │                          │     │created_at       TIMESTAMP   │
-            │ 1                        │     │                 DEFAULT NOW()│
-            │                          │     │updated_at       TIMESTAMP   │
+└────────────────────────────────────┘ │     │city             VARCHAR(100)│
+    ↑ (inherits created_at,            │     │state            VARCHAR(2)  │
+       updated_at from USERS)          │     │zip_code         VARCHAR(10) │
+                                        │     │company_logo     TEXT        │
+                                        │     │registration_date DATE        │
+                                        │     │                 NOT NULL    │
+                                        └───────────────────────────────────┘
+                                            ↑ (inherits created_at,
+                                               updated_at from USERS)
             │                          └───────────────────────────────────┘
-            │                                      │
-            │ N                                    │ N
-            │                        │
-            │            ┌───────────┘
-            │            │
+            │ 1                                     │
+            │                                       │ N
+            │                       ┌───────────────┴───────────────┐
+            │                       │ N                             │
+            │                       │                               │
+            │                       ▼                               ▼
+            │            ┌─────────────────────────────────────────────────┐
+            │            │     CONSULTANT_CLIENTS (Join Table) ⭐ V009     │
+            │            ├─────────────────────────────────────────────────┤
+            │            │ PK  │ consultant_id  UUID  NOT NULL             │
+            │            │     │                → consultants.user_id      │
+            │            │ PK  │ client_id      UUID  NOT NULL             │
+            │            │     │                → clients.user_id          │
+            │            │     │ assigned_at    TIMESTAMP  NOT NULL        │
+            │            │     │                DEFAULT NOW()              │
+            │            │     │ status         VARCHAR(20) NOT NULL       │
+            │            │     │                (ACTIVE, INACTIVE, PENDING)│
+            │            └─────────────────────────────────────────────────┘
+            │                       │
+            │ N                     │ N
+            │                       │
+            │            ┌──────────┘
             │            │
             ▼            ▼
 ┌───────────────────────────────────────────────────────────────────────────┐
@@ -316,6 +335,20 @@ Tariff findActiveTariff(
 - **Cascade:** ON DELETE SET NULL (deletes consultant → keeps bill)
 - **Note:** Consultant is like an "upgraded" client with additional fields
 
+### 3.1 **CONSULTANTS ↔ CLIENTS** (N:M) ⭐ NEW - V009
+- **Type:** Many-to-Many
+- **Description:** A consultant can manage multiple clients, and a client can have multiple consultants (over time)
+- **Join Table:** `consultant_clients`
+- **Foreign Keys:** 
+  - `consultant_clients.consultant_id → consultants.user_id`
+  - `consultant_clients.client_id → clients.user_id`
+- **Cascade:** ON DELETE CASCADE (deletes consultant/client → removes associations)
+- **Additional Fields:**
+  - `assigned_at` - Timestamp of assignment
+  - `status` - ACTIVE, INACTIVE, PENDING (for access control)
+- **Purpose:** Access control and relationship management
+- **Note:** Consultant can only access bills of clients with ACTIVE status
+
 ### 4. **TARIFFS → ELECTRICITY_BILLS** (1:N) ⭐ NEW
 - **Type:** One-to-Many
 - **Description:** A tariff can be in multiple bills, but each bill has only ONE tariff
@@ -344,6 +377,7 @@ Tariff findActiveTariff(
 | Relationship | Cardinality | Required? |
 |---------|---------------|--------------|
 | User → Client/Consultant/Admin | 1:1 | Yes (inheritance) |
+| **Consultant ↔ Client** | **N:M** | **No (optional association)** ⭐ |
 | Client → Electricity_Bills | 1:N | No (client may have no bills) |
 | Consultant → Electricity_Bills | 1:N | No (consultant may not manage bills) |
 | **Tariff → Electricity_Bills** | **1:N** | **Yes (bill needs tariff)** |

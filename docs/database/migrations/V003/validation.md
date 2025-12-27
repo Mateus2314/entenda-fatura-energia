@@ -28,14 +28,16 @@ user_id          | UUID           | NOT NULL | PK
 consultant_name  | VARCHAR(255)   | NOT NULL |
 company          | VARCHAR(255)   | NOT NULL |
 cnpj             | VARCHAR(14)    | NOT NULL | UNIQUE
-address          | VARCHAR(500)   | NULL     |
+registration_number | VARCHAR(50) | NULL     |
+address          | VARCHAR(500)   | NOT NULL |
 city             | VARCHAR(100)   | NULL     |
 state            | VARCHAR(2)     | NULL     |
-zip_code         | VARCHAR(8)     | NULL     |
-registration_number | VARCHAR(50) | NULL     |
-company_logo     | VARCHAR(255)   | NULL     |
+zip_code         | VARCHAR(10)    | NULL     |
+company_logo     | TEXT           | NULL     |
 registration_date| DATE           | NOT NULL | DEFAULT CURRENT_DATE
 ```
+
+**Note:** `created_at` and `updated_at` are inherited from `users` table.
 
 ---
 
@@ -54,8 +56,8 @@ registration_date| DATE           | NOT NULL | DEFAULT CURRENT_DATE
 
 #### Check Constraints
 - ✅ `chk_cnpj_format` - Validates 14 digits format
-- ✅ `chk_state_format` - Validates 2 uppercase letters
-- ✅ `chk_zip_code_format` - Validates 8 digits format
+- ✅ `chk_state_format` - Validates 2 uppercase letters (NULL allowed)
+- ✅ `chk_zipcode_format` - Validates 00000-000 or 00000000 format (NULL allowed)
 
 ---
 
@@ -67,8 +69,10 @@ registration_date| DATE           | NOT NULL | DEFAULT CURRENT_DATE
 - ✅ `idx_consultants_cnpj` - Performance index on CNPJ
 - ✅ `idx_consultants_company` - Performance index on company
 - ✅ `idx_consultants_registration_date` - Performance index on registration_date
+- ✅ `idx_consultants_city` - Performance index on city
+- ✅ `idx_consultants_state` - Performance index on state
 
-**Total Indexes:** 4
+**Total Indexes:** 6
 
 ---
 

@@ -1,4 +1,94 @@
 # V003 - Create Consultants Table Migration
+
+## Overview
+
+| Field | Value |
+|-------|-------|
+| **Migration Version** | V003 |
+| **File Name** | `V003__create_consultants_table.sql` |
+| **Description** | Create consultants table following JOINED inheritance strategy |
+| **Depends On** | V001 (users table) |
+| **Date Created** | 2025-12-15 |
+| **Date Updated** | 2025-12-27 |
+| **Author** | Mateus De La Fuente Cezar |
+
+---
+
+## Purpose
+
+Create the `consultants` table to store consultant-specific data, implementing the JOINED inheritance strategy where consultant data is stored in a separate table linked to the `users` base table via foreign key.
+
+---
+
+## Schema Design
+
+### Table: `consultants`
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| user_id | UUID | PRIMARY KEY, FK -> users(id) | Reference to base user record |
+| consultant_name | VARCHAR(255) | NOT NULL | Full name of the consultant |
+| company | VARCHAR(255) | NOT NULL | Company name |
+| cnpj | VARCHAR(14) | NOT NULL, UNIQUE | Brazilian company tax ID (14 digits) |
+| registration_number | VARCHAR(50) | NULL | Professional registration number (optional) |
+| address | VARCHAR(500) | NOT NULL | Full address of the consultant/company |
+| city | VARCHAR(100) | NULL | City (optional) |
+| state | VARCHAR(2) | NULL | Brazilian state code - 2 uppercase letters (optional) |
+| zip_code | VARCHAR(10) | NULL | ZIP code (format: 00000-000 or 00000000) (optional) |
+| company_logo | TEXT | NULL | Base64 encoded logo or URL (optional) |
+| registration_date | DATE | NOT NULL, DEFAULT CURRENT_DATE | Consultant registration date |
+
+**Note:** `created_at` and `updated_at` are inherited from the `users` table, not duplicated here.
+
+---
+
+## Constraints
+
+### Primary Key
+- **Name:** `consultants_pkey`
+- **Column:** `user_id`
+- **Purpose:** Ensure one consultant record per user
+
+### Foreign Key
+- **Name:** `fk_consultant_user`
+- **Column:** `user_id`
+- **References:** `users(id)`
+- **On Delete:** CASCADE
+
+### Unique Constraint
+- **Name:** `consultants_cnpj_key`
+- **Column:** `cnpj`
+- **Purpose:** Prevent duplicate CNPJ registration
+
+### Check Constraints
+
+#### chk_cnpj_format
+- **Definition:** `cnpj ~ '^\d{14}$'`
+- **Purpose:** Ensure CNPJ contains exactly 14 digits
+
+#### chk_state_format
+- **Definition:** `state IS NULL OR state ~ '^[A-Z]{2}$'`
+- **Purpose:** Validate state code format when provided
+
+#### chk_zipcode_format
+- **Definition:** `zip_code IS NULL OR zip_code ~ '^\d{5}-?\d{3}$'`
+- **Purpose:** Validate ZIP code format when provided
+
+---
+
+## Indexes
+
+| Index Name | Type | Column(s) | Purpose |
+|------------|------|-----------|---------|
+| consultants_pkey | UNIQUE BTREE | user_id | Primary key enforcement |
+| consultants_cnpj_key | UNIQUE BTREE | cnpj | Uniqueness + fast CNPJ lookups |
+| idx_consultants_cnpj | BTREE | cnpj | Fast CNPJ search |
+| idx_consultants_company | BTREE | company | Search by company name |
+| idx_consultants_registration_date | BTREE | registration_date | Sort/filter by date |
+| idx_consultants_city | BTREE | city | Filter by city |
+| idx_consultants_state | BTREE | state | Filter by state |
+
+---
 - registration_date defaults to current date if not provided
 - Consultant can have optional company_logo for branding
 - Consultants can manage multiple electricity bills (1:N relationship)

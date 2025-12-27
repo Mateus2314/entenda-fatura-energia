@@ -26,14 +26,14 @@ Create the `clients` table to store client-specific data, implementing the JOINE
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | user_id | UUID | PRIMARY KEY, FK -> users(id) | Reference to base user record |
-| address | VARCHAR(500) | NOT NULL | Client street address |
-| city | VARCHAR(100) | | Client city |
-| state | VARCHAR(2) | | Client state (UF) |
-| zip_code | VARCHAR(10) | | Client ZIP code |
+| address | VARCHAR(500) | NOT NULL | Client full address |
+| city | VARCHAR(100) | NULL | Client city (optional) |
+| state | VARCHAR(2) | NULL | Client state code - 2 uppercase letters (optional) |
+| zip_code | VARCHAR(10) | NULL | Client ZIP code (format: 00000-000 or 00000000) (optional) |
 | cpf | VARCHAR(11) | NOT NULL, UNIQUE | Brazilian individual tax ID (11 digits) |
 | registration_date | DATE | NOT NULL, DEFAULT CURRENT_DATE | Client registration date |
-| created_at | TIMESTAMP | DEFAULT NOW() | Record creation timestamp |
-| updated_at | TIMESTAMP | | Record last update timestamp |
+
+**Note:** `created_at` and `updated_at` are inherited from the `users` table, not duplicated here.
 
 ---
 
@@ -85,10 +85,19 @@ users (1) ----< (1) clients
 - **Column:** `cpf`
 - **Purpose:** Prevent duplicate CPF registration
 
-### Check Constraint
-- **Name:** `chk_cpf_format`
+### Check Constraints
+
+#### chk_cpf_format
 - **Definition:** `cpf ~ '^\d{11}$'`
 - **Purpose:** Ensure CPF contains exactly 11 digits (no formatting)
+
+#### chk_state_format
+- **Definition:** `state IS NULL OR state ~ '^[A-Z]{2}$'`
+- **Purpose:** Validate state code format (2 uppercase letters) when provided
+
+#### chk_zipcode_format
+- **Definition:** `zip_code IS NULL OR zip_code ~ '^\d{5}-?\d{3}$'`
+- **Purpose:** Validate ZIP code format (00000-000 or 00000000) when provided
 
 ---
 
@@ -98,7 +107,11 @@ users (1) ----< (1) clients
 |------------|------|-----------|---------|
 | clients_pkey | UNIQUE BTREE | user_id | Primary key enforcement |
 | clients_cpf_key | UNIQUE BTREE | cpf | Uniqueness + fast CPF lookups |
-| idx_clients_cpf | BTREE | cpf | Redundant with unique index (optional) |
+| idx_clients_cpf | BTREE | cpf | Fast CPF search (redundant with unique) |
+| idx_clients_registration_date | BTREE | registration_date | Sort/filter by registration date |
+| idx_clients_city | BTREE | city | Filter by city |
+| idx_clients_state | BTREE | state | Filter by state |
+| idx_clients_zipcode | BTREE | zip_code | Filter by ZIP code |
 | idx_clients_registration_date | BTREE | registration_date | Query clients by registration date |
 
 ---

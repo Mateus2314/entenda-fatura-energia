@@ -27,6 +27,9 @@ ORDER BY ordinal_position;
 -- table_name | column_name        | data_type         | character_maximum_length | is_nullable | column_default
 -- clients    | user_id           | uuid              | NULL                     | NO          | NULL
 -- clients    | address           | character varying | 500                      | NO          | NULL
+-- clients    | city              | character varying | 100                      | YES         | NULL
+-- clients    | state             | character varying | 2                        | YES         | NULL
+-- clients    | zip_code          | character varying | 10                       | YES         | NULL
 -- clients    | cpf               | character varying | 11                       | NO          | NULL
 -- clients    | registration_date | date              | NULL                     | NO          | CURRENT_DATE
 
@@ -318,6 +321,84 @@ VALUES ('<USER_ID>', 'Address', '123.456.789-01');
 ROLLBACK;
 
 
+-- ----------------------------------------------------------------------------
+-- 12. FUNCTIONAL TEST: STATE FORMAT VALIDATION
+-- ----------------------------------------------------------------------------
+-- Test 6: Verify state format CHECK constraint
+BEGIN;
+
+INSERT INTO users (email, password, name, status)
+VALUES ('state.test@example.com', 'password', 'State Test', 'ACTIVE')
+    RETURNING id;
+
+-- Valid state (2 uppercase letters)
+INSERT INTO clients (user_id, address, cpf, state)
+VALUES ('<USER_ID>', 'Address', '11111111111', 'SP'); -- Should succeed
+
+-- Valid NULL state
+INSERT INTO clients (user_id, address, cpf, state)
+VALUES ('<USER_ID_2>', 'Address', '22222222222', NULL); -- Should succeed
+
+-- Invalid state formats - ALL SHOULD FAIL
+-- Lowercase
+INSERT INTO clients (user_id, address, cpf, state)
+VALUES ('<USER_ID_3>', 'Address', '33333333333', 'sp');
+-- Expected: ERROR: new row for relation "clients" violates check constraint "chk_state_format"
+
+-- Too short
+INSERT INTO clients (user_id, address, cpf, state)
+VALUES ('<USER_ID_4>', 'Address', '44444444444', 'S');
+-- Expected: ERROR: new row for relation "clients" violates check constraint "chk_state_format"
+
+-- Too long
+INSERT INTO clients (user_id, address, cpf, state)
+VALUES ('<USER_ID_5>', 'Address', '55555555555', 'SAO');
+-- Expected: ERROR: new row for relation "clients" violates check constraint "chk_state_format"
+
+ROLLBACK;
+
+
+-- ----------------------------------------------------------------------------
+-- 13. FUNCTIONAL TEST: ZIP CODE FORMAT VALIDATION
+-- ----------------------------------------------------------------------------
+-- Test 7: Verify zip_code format CHECK constraint
+BEGIN;
+
+INSERT INTO users (email, password, name, status)
+VALUES ('zipcode.test@example.com', 'password', 'ZipCode Test', 'ACTIVE')
+    RETURNING id;
+
+-- Valid zip_code with hyphen (format: 12345-678)
+INSERT INTO clients (user_id, address, cpf, zip_code)
+VALUES ('<USER_ID>', 'Address', '66666666666', '12345-678'); -- Should succeed
+
+-- Valid zip_code without hyphen (format: 12345678)
+INSERT INTO clients (user_id, address, cpf, zip_code)
+VALUES ('<USER_ID_2>', 'Address', '77777777777', '12345678'); -- Should succeed
+
+-- Valid NULL zip_code
+INSERT INTO clients (user_id, address, cpf, zip_code)
+VALUES ('<USER_ID_3>', 'Address', '88888888888', NULL); -- Should succeed
+
+-- Invalid zip_code formats - ALL SHOULD FAIL
+-- Too short
+INSERT INTO clients (user_id, address, cpf, zip_code)
+VALUES ('<USER_ID_4>', 'Address', '99999999999', '12345');
+-- Expected: ERROR: new row for relation "clients" violates check constraint "chk_zipcode_format"
+
+-- Invalid format (missing digits)
+INSERT INTO clients (user_id, address, cpf, zip_code)
+VALUES ('<USER_ID_5>', 'Address', '10101010101', '12345-67');
+-- Expected: ERROR: new row for relation "clients" violates check constraint "chk_zipcode_format"
+
+-- With letters
+INSERT INTO clients (user_id, address, cpf, zip_code)
+VALUES ('<USER_ID_6>', 'Address', '20202020202', '1234A-678');
+-- Expected: ERROR: new row for relation "clients" violates check constraint "chk_zipcode_format"
+
+ROLLBACK;
+
+
 -- ============================================================================
 -- END OF VALIDATION QUERIES
 -- ============================================================================
@@ -325,4 +406,5 @@ ROLLBACK;
 -- - Replace <USER_ID> placeholders with actual UUIDs from INSERT...RETURNING
 -- - All tests use transactions (BEGIN/ROLLBACK) for safety
 -- - Execute queries in order for proper validation flow
+-- Updated: 2025-12-27 - Added tests for city, state, and zip_code columns
 -- ============================================================================

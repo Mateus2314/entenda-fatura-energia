@@ -28,8 +28,8 @@ Create the `admins` table to store administrator-specific data, implementing the
 | user_id | UUID | PRIMARY KEY, FK -> users(id) | Reference to base user record |
 | role | VARCHAR(50) | NOT NULL | Admin role type (e.g., SUPER_ADMIN, ADMIN, MODERATOR) |
 | permissions | JSONB | NULL | JSON object with specific permissions and access controls |
-| created_at | TIMESTAMP | NOT NULL, DEFAULT NOW() | Record creation timestamp |
-| updated_at | TIMESTAMP | DEFAULT NOW() | Record last update timestamp |
+
+**Note:** `created_at` and `updated_at` are inherited from the `users` table, not duplicated here.
 
 ---
 
@@ -84,7 +84,6 @@ users (1) ----< (1) admins
 |------------|------|-----------|---------|
 | pk_admins | UNIQUE BTREE | user_id | Primary key enforcement |
 | idx_admins_role | BTREE | role | Fast role-based queries |
-| idx_admins_user_id | BTREE | user_id | Redundant with PK (for explicit FK optimization) |
 
 ---
 

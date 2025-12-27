@@ -18,7 +18,7 @@
 **Result:** PASS
 
 - ✅ Table `admins` exists
-- ✅ 5 columns created correctly
+- ✅ 3 columns created correctly
 - ✅ All data types match specification
 - ✅ Column constraints applied correctly
 
@@ -27,9 +27,9 @@
 user_id      | UUID           | NOT NULL | PK, FK
 role         | VARCHAR(50)    | NOT NULL |
 permissions  | JSONB          | NULL     |
-created_at   | TIMESTAMP      | NOT NULL | DEFAULT NOW()
-updated_at   | TIMESTAMP      | NULL     | DEFAULT NOW()
 ```
+
+**Note:** `created_at` and `updated_at` are inherited from `users` table.
 
 ---
 
@@ -64,9 +64,8 @@ fk_admins_user      | FOREIGN KEY
 
 - ✅ `pk_admins` (PRIMARY KEY) - Automatic
 - ✅ `idx_admins_role` - Performance index on role
-- ✅ `idx_admins_user_id` - Performance index on user_id
 
-**Total Indexes:** 3
+**Total Indexes:** 2
 
 **Index Verification Query:**
 ```sql
