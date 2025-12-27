@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "clients")
@@ -41,6 +43,10 @@ public class Client extends User {
 
     @Column(name = "registration_date", nullable = false)
     private LocalDate registrationDate;
+
+    // Many-to-Many relationship with Consultants (inverse side)
+    @ManyToMany(mappedBy = "managedClients")
+    private Set<Consultant> consultants = new HashSet<>();
 
     public Client() {
         super();

@@ -247,4 +247,149 @@ class ClientTest {
         assertEquals(UserType.CLIENT, client.getUserType());
     }
 
+    // =========================================================================
+    // Many-to-Many Relationship Tests
+    // =========================================================================
+
+    @Test
+    @DisplayName("Should initialize consultants as empty Set")
+    void shouldInitializeConsultantsAsEmptySet() {
+        Client client = new Client();
+
+        assertNotNull(client.getConsultants());
+        assertTrue(client.getConsultants().isEmpty());
+        // Note: Size check is redundant with isEmpty() check
+    }
+
+    @Test
+    @DisplayName("Should add consultant through bidirectional relationship")
+    void shouldAddConsultantThroughBidirectionalRelationship() {
+        // Arrange
+        Client client = createValidClient();
+
+        Consultant consultant = new Consultant();
+        consultant.setEmail("consultant@example.com");
+        consultant.setPasswordHash("hashedPassword123");
+        consultant.setName("João Silva");
+        consultant.setConsultantName("João Silva - Consultor");
+        consultant.setCompany("Energia Consulting Ltda");
+        consultant.setCnpj("12345678000190");
+        consultant.setAddress("Av. Paulista, 1000");
+
+        // Act - Add through consultant side (owner of the relationship)
+        consultant.addManagedClient(client);
+
+        // Assert - Verify both sides
+        assertTrue(client.getConsultants().contains(consultant));
+        assertEquals(1, client.getConsultants().size());
+        assertTrue(consultant.getManagedClients().contains(client));
+    }
+
+    @Test
+    @DisplayName("Should have multiple consultants over time")
+    void shouldHaveMultipleConsultantsOverTime() {
+        // Arrange
+        Client client = createValidClient();
+
+        Consultant consultant1 = new Consultant();
+        consultant1.setEmail("consultant1@example.com");
+        consultant1.setPasswordHash("hashedPassword123");
+        consultant1.setName("João Silva");
+        consultant1.setConsultantName("João Silva - Consultor");
+        consultant1.setCompany("Energia Consulting Ltda");
+        consultant1.setCnpj("12345678000190");
+        consultant1.setAddress("Av. Paulista, 1000");
+
+        Consultant consultant2 = new Consultant();
+        consultant2.setEmail("consultant2@example.com");
+        consultant2.setPasswordHash("hashedPassword456");
+        consultant2.setName("Maria Santos");
+        consultant2.setConsultantName("Maria Santos - Consultora");
+        consultant2.setCompany("Power Consulting SA");
+        consultant2.setCnpj("98765432000199");
+        consultant2.setAddress("Rua Augusta, 500");
+
+        // Act
+        consultant1.addManagedClient(client);
+        consultant2.addManagedClient(client);
+
+        // Assert
+        assertEquals(2, client.getConsultants().size());
+        assertTrue(client.getConsultants().contains(consultant1));
+        assertTrue(client.getConsultants().contains(consultant2));
+    }
+
+    @Test
+    @DisplayName("Should remove consultant through bidirectional relationship")
+    void shouldRemoveConsultantThroughBidirectionalRelationship() {
+        // Arrange
+        Client client = createValidClient();
+
+        Consultant consultant = new Consultant();
+        consultant.setEmail("consultant@example.com");
+        consultant.setPasswordHash("hashedPassword123");
+        consultant.setName("João Silva");
+        consultant.setConsultantName("João Silva - Consultor");
+        consultant.setCompany("Energia Consulting Ltda");
+        consultant.setCnpj("12345678000190");
+        consultant.setAddress("Av. Paulista, 1000");
+
+        consultant.addManagedClient(client);
+        assertEquals(1, client.getConsultants().size());
+
+        // Act - Remove through consultant side
+        consultant.removeManagedClient(client);
+
+        // Assert - Verify both sides
+        assertFalse(client.getConsultants().contains(consultant));
+        assertEquals(0, client.getConsultants().size());
+        assertFalse(consultant.getManagedClients().contains(client));
+    }
+
+    @Test
+    @DisplayName("Should maintain referential integrity when consultant is removed")
+    void shouldMaintainReferentialIntegrityWhenConsultantIsRemoved() {
+        // Arrange
+        Client client = createValidClient();
+
+        Consultant consultant1 = new Consultant();
+        consultant1.setEmail("consultant1@example.com");
+        consultant1.setPasswordHash("hashedPassword123");
+        consultant1.setName("João Silva");
+        consultant1.setConsultantName("João Silva - Consultor");
+        consultant1.setCompany("Energia Consulting Ltda");
+        consultant1.setCnpj("12345678000190");
+        consultant1.setAddress("Av. Paulista, 1000");
+
+        Consultant consultant2 = new Consultant();
+        consultant2.setEmail("consultant2@example.com");
+        consultant2.setPasswordHash("hashedPassword456");
+        consultant2.setName("Maria Santos");
+        consultant2.setConsultantName("Maria Santos - Consultora");
+        consultant2.setCompany("Power Consulting SA");
+        consultant2.setCnpj("98765432000199");
+        consultant2.setAddress("Rua Augusta, 500");
+
+        consultant1.addManagedClient(client);
+        consultant2.addManagedClient(client);
+        assertEquals(2, client.getConsultants().size());
+
+        // Act - Remove only one consultant
+        consultant1.removeManagedClient(client);
+
+        // Assert - Other consultant remains
+        assertEquals(1, client.getConsultants().size());
+        assertFalse(client.getConsultants().contains(consultant1));
+        assertTrue(client.getConsultants().contains(consultant2));
+    }
+
+    @Test
+    @DisplayName("Should verify consultants collection is not null after instantiation")
+    void shouldVerifyConsultantsCollectionIsNotNullAfterInstantiation() {
+        Client client = new Client();
+
+        assertNotNull(client.getConsultants());
+        assertInstanceOf(java.util.Set.class, client.getConsultants());
+    }
+
 }

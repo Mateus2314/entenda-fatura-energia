@@ -1,10 +1,7 @@
 package com.understand_your_electricity_bill.model;
 
 import com.understand_your_electricity_bill.model.enums.UserType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -12,6 +9,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "consultants")
@@ -62,6 +61,15 @@ public class Consultant extends User {
     @Column(name = "registration_date", nullable = false)
     private LocalDate registrationDate;
 
+    // Many-to-Many relationship with Clients
+    @ManyToMany
+    @JoinTable(
+        name = "consultant_clients",
+        joinColumns = @JoinColumn(name = "consultant_id"),
+        inverseJoinColumns = @JoinColumn(name = "client_id")
+    )
+    private Set<Client> managedClients = new HashSet<>();
+
     public Consultant() {
         super();
         this.setUserType(UserType.CONSULTANT);
@@ -73,6 +81,26 @@ public class Consultant extends User {
         if (this.registrationDate == null) {
             this.registrationDate = LocalDate.now();
         }
+    }
+
+    /**
+     * Adiciona um cliente à lista de clientes gerenciados
+     * Mantém consistência bidirecional da relação Many-to-Many
+     * @param client Cliente a ser adicionado
+     */
+    public void addManagedClient(Client client) {
+        this.managedClients.add(client);
+        client.getConsultants().add(this);
+    }
+
+    /**
+     * Remove um cliente da lista de clientes gerenciados
+     * Mantém consistência bidirecional da relação Many-to-Many
+     * @param client Cliente a ser removido
+     */
+    public void removeManagedClient(Client client) {
+        this.managedClients.remove(client);
+        client.getConsultants().remove(this);
     }
 
 }
