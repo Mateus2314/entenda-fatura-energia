@@ -12,6 +12,8 @@
 | **V002** | Clients table | ✅ | [Summary](V002.md) · [Details](V002/migration.md) · [Queries](V002/queries.sql) · [Validation](V002/validation.md) |
 | **V003** | Consultants table | ✅ | [Summary](V003.md) · [Details](V003/migration.md) · [Queries](V003/queries.sql) · [Validation](V003/validation.md) |
 | **V004** | Admins table | ✅ | [Summary](V004.md) · [Details](V004/migration.md) · [Queries](V004/queries.sql) · [Validation](V004/validation.md) |
+| **V005** | Tariffs table | ✅ | [Summary](V005.md) · [Details](V005/migration.md) · [Queries](V005/queries.sql) · [Validation](V005/validation.md) |
+| **V006** | Electricity bills table | ✅ | [Summary](V006.md) · [Details](V006/migration.md) · [Queries](V006/queries.sql) · [Validation](V006/validation.md) |
 
 ---
 
@@ -55,12 +57,16 @@ users (V001)
 ```
 V001 (users)
   │
-  ├─► V002 (clients)
-  ├─► V003 (consultants)
-  └─► V004 (admins)
+  ├─► V002 (clients) ───────┐
+  ├─► V003 (consultants) ───┤
+  └─► V004 (admins)         │
+                            ├─► V006 (electricity_bills)
+V005 (tariffs) ─────────────┘
 ```
 
-All child tables depend on `users` table via foreign key `user_id`.
+- V002-V004 depend on `users` via FK `user_id`
+- V005 is independent (ANEEL API data)
+- V006 depends on `clients`, `consultants`, and `tariffs`
 
 ---
 
@@ -71,6 +77,8 @@ All child tables depend on `users` table via foreign key `user_id`.
 2. V002 - Creates clients (depends on users)
 3. V003 - Creates consultants (depends on users)
 4. V004 - Creates admins (depends on users)
+5. V005 - Creates tariffs table (independent - ANEEL API integration)
+6. V006 - Creates electricity_bills table (depends on clients, consultants, tariffs)
 
 Flyway ensures correct order automatically.
 
