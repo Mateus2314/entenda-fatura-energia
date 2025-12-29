@@ -74,7 +74,8 @@ TRUNCATE TABLE users CASCADE;
 ### Option 3: Validation Only
 
 ```sql
--- Execute validate_test_data.sql to check existing data
+-- Execute validation_tests.sql to check existing data
+-- This runs 12 comprehensive test suites
 ```
 
 ## Expected Results
@@ -163,16 +164,6 @@ This test data is designed to work with:
 - ✅ Service layer tests
 - ✅ Controller integration tests
 - ✅ Frontend development
-
-## Next Steps
-
-After loading test data:
-
-1. ✅ Execute `validate_test_data.sql` for comprehensive checks
-2. ✅ Test CRUD operations through repositories
-3. ✅ Develop and test business logic in services
-4. ✅ Test API endpoints
-5. ✅ Connect frontend to backend
 
 ## Notes
 
