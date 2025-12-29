@@ -10,6 +10,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "admins")
@@ -23,6 +25,7 @@ public class Admin extends User {
     @Column(name = "role", nullable = false, length = 50)
     private String role;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "permissions", columnDefinition = "JSONB")
     private String permissions;
 
