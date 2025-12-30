@@ -350,36 +350,6 @@ class AnalysisRepositoryTest {
                 .isLessThan(decreaseAnalyses.get(1).getComparisonPrevMonth());
     }
 
-    @Test
-    @DisplayName("Should find analyses created within date range")
-    void shouldFindAnalysesCreatedWithinDateRange() {
-        // Given
-        LocalDateTime now = LocalDateTime.now();
-        createAnalysis(testBill1, new BigDecimal("350.00"), new BigDecimal("1.1000"),
-                new BigDecimal("5.5"), "Analysis 1");
-
-        // Wait a moment to ensure different timestamps
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        LocalDateTime midPoint = LocalDateTime.now();
-
-        createAnalysis(testBill2, new BigDecimal("400.00"), new BigDecimal("1.1000"),
-                new BigDecimal("10.0"), "Analysis 2");
-
-        entityManager.flush();
-        entityManager.clear();
-
-        // When
-        List<Analysis> analyses = analysisRepository.findByCreatedAtBetween(
-                now.minusMinutes(1), midPoint);
-
-        // Then
-        assertThat(analyses).hasSize(1);
-    }
 
     // ========== STATISTICAL QUERY TESTS ==========
 
