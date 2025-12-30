@@ -47,16 +47,15 @@ class BillItemRepositoryTest {
 
     private ElectricityBill testBill1;
     private ElectricityBill testBill2;
-    private Client testClient;
-    private Tariff testTariff;
+
 
     @BeforeEach
     void setUp() {
         // Create test client
-        testClient = createClient("client@test.com", "Test Client", "12345678901");
+        Client testClient = createClient();
 
         // Create test tariff
-        testTariff = createTariff("CPFL PAULISTA", "Convencional", LocalDate.of(2024, 1, 1));
+        Tariff testTariff = createTariff();
 
         // Create test bills
         testBill1 = createBill(testClient, testTariff, LocalDate.of(2024, 11, 1),
@@ -70,30 +69,30 @@ class BillItemRepositoryTest {
 
     // ========== HELPER METHODS ==========
 
-    private Client createClient(String email, String name, String cpf) {
+    private Client createClient() {
         Client client = new Client();
-        client.setEmail(email);
-        client.setName(name);
+        client.setEmail("client@test.com");
+        client.setName("Test Client");
         client.setPasswordHash("$2a$10$hashedPassword");
         client.setUserType(UserType.CLIENT);
         client.setStatus(UserStatus.ACTIVE);
         client.setPhone("+5511999999999");
-        client.setCpf(cpf);
+        client.setCpf("12345678901");
         client.setAddress("Test Address, 123");
         client.setRegistrationDate(LocalDate.now());
         return entityManager.persistAndFlush(client);
     }
 
-    private Tariff createTariff(String distributor, String tariffModality, LocalDate validFrom) {
+    private Tariff createTariff() {
         Tariff tariff = new Tariff();
         tariff.setGenerationDate(LocalDate.now());
-        tariff.setDistributor(distributor);
+        tariff.setDistributor("CPFL PAULISTA");
         tariff.setCnpjDistributor("12345678000190");
-        tariff.setValidFrom(validFrom);
-        tariff.setValidUntil(validFrom.plusYears(1));
+        tariff.setValidFrom(LocalDate.of(2024, 1, 1));
+        tariff.setValidUntil(LocalDate.of(2025, 1, 1));
         tariff.setTariffBaseDesc("Tarifa de Aplicação");
         tariff.setSubgroup("B1");
-        tariff.setTariffModality(tariffModality);
+        tariff.setTariffModality("Convencional");
         tariff.setConsumerClass("Residencial");
         tariff.setConsumerSubclass("Residencial");
         tariff.setDetail("Normal");
@@ -122,7 +121,7 @@ class BillItemRepositoryTest {
         return entityManager.persistAndFlush(bill);
     }
 
-    private BillItem createBillItem(ElectricityBill bill, String itemType, String description,
+    private void createBillItem(ElectricityBill bill, String itemType, String description,
                                     BigDecimal quantity, BigDecimal unitPrice, BigDecimal amount) {
         BillItem item = new BillItem();
         item.setBill(bill);
@@ -131,7 +130,7 @@ class BillItemRepositoryTest {
         item.setQuantity(quantity);
         item.setUnitPrice(unitPrice);
         item.setAmount(amount);
-        return entityManager.persistAndFlush(item);
+        entityManager.persistAndFlush(item);
     }
 
     // ========== BASIC QUERY TESTS ==========
