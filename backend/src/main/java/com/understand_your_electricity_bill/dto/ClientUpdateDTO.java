@@ -1,5 +1,6 @@
 package com.understand_your_electricity_bill.dto;
 
+import com.understand_your_electricity_bill.dto.validation.DtoValidationUtils;
 import com.understand_your_electricity_bill.model.enums.UserStatus;
 import jakarta.validation.constraints.*;
 
@@ -58,12 +59,13 @@ public record ClientUpdateDTO(
     }
 
     /**
-     * Check if at least one field is being updated
+     * Check if at least one field is being updated.
+     * Uses reflection to check all fields except ID.
+     *
+     * @return true if at least one field (excluding ID) is not null
      */
     public boolean hasUpdates() {
-        return email != null || name != null || phone != null ||
-               address != null || city != null || state != null ||
-               zipCode != null || status != null;
+        return DtoValidationUtils.hasUpdates(this);
     }
 }
 

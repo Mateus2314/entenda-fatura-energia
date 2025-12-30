@@ -155,6 +155,8 @@ class ClientUpdateDTOTest {
     }
 
     // ========== NORMALIZATION TESTS ==========
+    // Note: Detailed normalization logic is tested in DtoValidationUtilsTest
+    // This test verifies integration with the DTO
 
     @Test
     @DisplayName("Should normalize email to lowercase")
@@ -171,37 +173,6 @@ class ClientUpdateDTOTest {
         assertThat(dto.email()).isEqualTo("new.email@test.com");
     }
 
-    @Test
-    @DisplayName("Should normalize state to uppercase")
-    void shouldNormalizeStateToUppercase() {
-        // Given & When
-        UUID clientId = UUID.randomUUID();
-        ClientUpdateDTO dto = new ClientUpdateDTO(
-                clientId,
-                null, null, null, null, null,
-                "rj",
-                null, null
-        );
-
-        // Then
-        assertThat(dto.state()).isEqualTo("RJ");
-    }
-
-    @Test
-    @DisplayName("Should remove dashes from ZIP code")
-    void shouldRemoveDashesFromZipCode() {
-        // Given & When
-        UUID clientId = UUID.randomUUID();
-        ClientUpdateDTO dto = new ClientUpdateDTO(
-                clientId,
-                null, null, null, null, null, null,
-                "20000-000",
-                null
-        );
-
-        // Then
-        assertThat(dto.zipCode()).isEqualTo("20000000");
-    }
 
     @Test
     @DisplayName("Should trim all string fields")

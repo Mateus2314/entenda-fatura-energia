@@ -331,6 +331,8 @@ class ConsultantCreateDTOTest {
     }
 
     // ========== NORMALIZATION TESTS ==========
+    // Note: Detailed normalization logic is tested in DtoValidationUtilsTest
+    // These tests verify integration with the DTO
 
     @Test
     @DisplayName("Should normalize email to lowercase")
@@ -374,83 +376,6 @@ class ConsultantCreateDTOTest {
         assertThat(dto.cnpj()).isEqualTo("12345678000190");
     }
 
-    @Test
-    @DisplayName("Should remove dashes from ZIP code")
-    void shouldRemoveDashesFromZipCode() {
-        // Given & When
-        ConsultantCreateDTO dto = new ConsultantCreateDTO(
-                "consultant@company.com",
-                "StrongPass@123",
-                "João Consultor",
-                null,
-                "João Consultor",
-                "Energy Consulting Ltda",
-                "12345678000190",
-                null,
-                "Av. Paulista, 1000",
-                null, null,
-                "01310-100",
-                null
-        );
-
-        // Then
-        assertThat(dto.zipCode()).isEqualTo("01310100");
-    }
-
-    @Test
-    @DisplayName("Should normalize state to uppercase")
-    void shouldNormalizeStateToUppercase() {
-        // Given & When
-        ConsultantCreateDTO dto = new ConsultantCreateDTO(
-                "consultant@company.com",
-                "StrongPass@123",
-                "João Consultor",
-                null,
-                "João Consultor",
-                "Energy Consulting Ltda",
-                "12345678000190",
-                null,
-                "Av. Paulista, 1000",
-                "São Paulo",
-                "sp",
-                null, null
-        );
-
-        // Then
-        assertThat(dto.state()).isEqualTo("SP");
-    }
-
-    @Test
-    @DisplayName("Should trim whitespace from all string fields")
-    void shouldTrimWhitespaceFromAllStringFields() {
-        // Given & When
-        ConsultantCreateDTO dto = new ConsultantCreateDTO(
-                "  consultant@company.com  ",
-                "StrongPass@123",
-                "  João Consultor  ",
-                "  +5511999999999  ",
-                "  João Consultor  ",
-                "  Energy Consulting Ltda  ",
-                "12345678000190",
-                "  REG123456  ",
-                "  Av. Paulista, 1000  ",
-                "  São Paulo  ",
-                "SP",
-                null,
-                "  https://logo.url  "
-        );
-
-        // Then
-        assertThat(dto.email()).isEqualTo("consultant@company.com");
-        assertThat(dto.name()).isEqualTo("João Consultor");
-        assertThat(dto.phone()).isEqualTo("+5511999999999");
-        assertThat(dto.consultantName()).isEqualTo("João Consultor");
-        assertThat(dto.company()).isEqualTo("Energy Consulting Ltda");
-        assertThat(dto.registrationNumber()).isEqualTo("REG123456");
-        assertThat(dto.address()).isEqualTo("Av. Paulista, 1000");
-        assertThat(dto.city()).isEqualTo("São Paulo");
-        assertThat(dto.companyLogo()).isEqualTo("https://logo.url");
-    }
 
     // ========== SIZE VALIDATION TESTS ==========
 

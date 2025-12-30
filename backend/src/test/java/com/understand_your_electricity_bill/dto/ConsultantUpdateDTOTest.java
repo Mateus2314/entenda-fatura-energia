@@ -157,6 +157,8 @@ class ConsultantUpdateDTOTest {
     }
 
     // ========== NORMALIZATION TESTS ==========
+    // Note: Detailed normalization logic is tested in DtoValidationUtilsTest
+    // This test verifies integration with the DTO
 
     @Test
     @DisplayName("Should normalize email to lowercase")
@@ -173,70 +175,6 @@ class ConsultantUpdateDTOTest {
         assertThat(dto.email()).isEqualTo("new.email@company.com");
     }
 
-    @Test
-    @DisplayName("Should normalize state to uppercase")
-    void shouldNormalizeStateToUppercase() {
-        // Given & When
-        UUID consultantId = UUID.randomUUID();
-        ConsultantUpdateDTO dto = new ConsultantUpdateDTO(
-                consultantId,
-                null, null, null, null, null, null, null, null,
-                "rj",
-                null, null, null
-        );
-
-        // Then
-        assertThat(dto.state()).isEqualTo("RJ");
-    }
-
-    @Test
-    @DisplayName("Should remove dashes from ZIP code")
-    void shouldRemoveDashesFromZipCode() {
-        // Given & When
-        UUID consultantId = UUID.randomUUID();
-        ConsultantUpdateDTO dto = new ConsultantUpdateDTO(
-                consultantId,
-                null, null, null, null, null, null, null, null, null,
-                "20000-000",
-                null, null
-        );
-
-        // Then
-        assertThat(dto.zipCode()).isEqualTo("20000000");
-    }
-
-    @Test
-    @DisplayName("Should trim all string fields")
-    void shouldTrimAllStringFields() {
-        // Given & When
-        UUID consultantId = UUID.randomUUID();
-        ConsultantUpdateDTO dto = new ConsultantUpdateDTO(
-                consultantId,
-                "  new.email@company.com  ",
-                "  New Name  ",
-                "  +5511999999999  ",
-                "  New Consultant Name  ",
-                "  New Company  ",
-                "  REG999  ",
-                "  New Address  ",
-                "  New City  ",
-                "RJ",
-                "20000000",
-                "  https://newlogo.url  ",
-                null
-        );
-
-        // Then
-        assertThat(dto.email()).isEqualTo("new.email@company.com");
-        assertThat(dto.name()).isEqualTo("New Name");
-        assertThat(dto.phone()).isEqualTo("+5511999999999");
-        assertThat(dto.consultantName()).isEqualTo("New Consultant Name");
-        assertThat(dto.company()).isEqualTo("New Company");
-        assertThat(dto.registrationNumber()).isEqualTo("REG999");
-        assertThat(dto.address()).isEqualTo("New Address");
-        assertThat(dto.city()).isEqualTo("New City");
-        assertThat(dto.companyLogo()).isEqualTo("https://newlogo.url");
-    }
 
     // ========== HASUPDATE METHOD TESTS ==========
 

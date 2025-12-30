@@ -73,6 +73,30 @@ class ClientCreateDTOTest {
     // ========== EMAIL VALIDATION TESTS ==========
 
     @Test
+    @DisplayName("Should fail when email is blank")
+    void shouldFailWhenEmailIsBlank() {
+        // Given
+        Validator validator = getValidator();
+        ClientCreateDTO dto = new ClientCreateDTO(
+                "",
+                "SenhaForte@123",
+                "João da Silva",
+                null,
+                "12345678901",
+                "Rua das Flores, 123",
+                null, null, null
+        );
+
+        // When
+        Set<ConstraintViolation<ClientCreateDTO>> violations = validator.validate(dto);
+
+        // Then
+        assertThat(violations).isNotEmpty();
+        assertThat(violations).anyMatch(v ->
+                v.getPropertyPath().toString().equals("email"));
+    }
+
+    @Test
     @DisplayName("Should fail when email format is invalid")
     void shouldFailWhenEmailFormatIsInvalid() {
         // Given
@@ -196,11 +220,11 @@ class ClientCreateDTOTest {
                         v.getMessage().contains("special character"));
     }
 
-    // ========== EMAIL VALIDATION TESTS ==========
+    // ========== CPF VALIDATION TESTS ==========
 
     @Test
-    @DisplayName("Should fail when email is blank")
-    void shouldFailWhenEmailIsBlank() {
+    @DisplayName("Should fail when CPF is blank")
+    void shouldFailWhenCpfIsBlank() {
         // Given
         Validator validator = getValidator();
         ClientCreateDTO dto = new ClientCreateDTO(
@@ -247,8 +271,9 @@ class ClientCreateDTOTest {
                         v.getMessage().contains("11 digits"));
     }
 
-
     // ========== NORMALIZATION TESTS ==========
+    // Note: Detailed normalization logic is tested in DtoValidationUtilsTest
+    // These tests verify integration with the DTO
 
     @Test
     @DisplayName("Should normalize email to lowercase")
@@ -286,44 +311,6 @@ class ClientCreateDTOTest {
         assertThat(dto.cpf()).isEqualTo("12345678901");
     }
 
-    @Test
-    @DisplayName("Should remove dashes from ZIP code")
-    void shouldRemoveDashesFromZipCode() {
-        // Given & When
-        ClientCreateDTO dto = new ClientCreateDTO(
-                "joao.silva@email.com",
-                "SenhaForte@123",
-                "João da Silva",
-                null,
-                "12345678901",
-                "Rua das Flores, 123",
-                null, null,
-                "01234-567"
-        );
-
-        // Then
-        assertThat(dto.zipCode()).isEqualTo("01234567");
-    }
-
-    @Test
-    @DisplayName("Should normalize state to uppercase")
-    void shouldNormalizeStateToUppercase() {
-        // Given & When
-        ClientCreateDTO dto = new ClientCreateDTO(
-                "joao.silva@email.com",
-                "SenhaForte@123",
-                "João da Silva",
-                null,
-                "12345678901",
-                "Rua das Flores, 123",
-                "São Paulo",
-                "sp",
-                null
-        );
-
-        // Then
-        assertThat(dto.state()).isEqualTo("SP");
-    }
 
     @Test
     @DisplayName("Should trim whitespace from all string fields")
